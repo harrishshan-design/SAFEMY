@@ -1,6 +1,4 @@
-import { getDb } from "../../../db";
-import { pilotSignups } from "../../../db/schema";
-import { toRouteErrorMessage } from "../../../db/route-error";
+import { saveSubmission } from "../../../db/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -16,17 +14,17 @@ export async function POST(request: Request) {
       return Response.json({ error: `Missing: ${missing.join(", ")}` }, { status: 400 });
     }
 
-    const db = await getDb();
-    const [row] = await db
-      .insert(pilotSignups)
-      .values({ name, email, phone, interest, area })
-      .returning();
+    const reference = await saveSubmission("safemy_pilot_signups", {
+      name,
+      email,
+      phone,
+      interest,
+      area,
+    });
 
-    return Response.json({ signup: row }, { status: 201 });
+    return Response.json({ reference }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      { error: toRouteErrorMessage(error, "pilot_signups") },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    return Response.json({ error: message }, { status: 500 });
   }
 }

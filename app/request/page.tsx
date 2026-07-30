@@ -35,7 +35,7 @@ function RequestForm() {
   const preselectedService = searchParams.get("service") ?? "";
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [error, setError] = useState("");
-  const [referenceId, setReferenceId] = useState<number | null>(null);
+  const [reference, setReference] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -61,9 +61,9 @@ function RequestForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { request?: { id: number }; error?: string };
-      if (!res.ok || !data.request) throw new Error(data.error ?? "Something went wrong. Please try again.");
-      setReferenceId(data.request.id);
+      const data = (await res.json()) as { reference?: string; error?: string };
+      if (!res.ok || !data.reference) throw new Error(data.error ?? "Something went wrong. Please try again.");
+      setReference(data.reference);
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -76,7 +76,7 @@ function RequestForm() {
       <div className="confirmation-card">
         <span className="modal-icon">✓</span>
         <h2>Request received.</h2>
-        <p>Reference <b>#{referenceId}</b>. Your request is <span className="status-pill">pending review</span>. A member of the SafeMY team will contact you within 1–2 business days to confirm availability, licensed-agency assignment and final pricing.</p>
+        <p>Reference <b>{reference}</b>. Your request is <span className="status-pill">pending review</span>. A member of the SafeMY team will contact you within 1–2 business days to confirm availability, licensed-agency assignment and final pricing.</p>
         <p className="form-note">No professional has been assigned yet, and no payment has been taken. This is not a confirmed booking.</p>
       </div>
     );

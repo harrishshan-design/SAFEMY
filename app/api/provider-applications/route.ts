@@ -1,6 +1,4 @@
-import { getDb } from "../../../db";
-import { providerApplications } from "../../../db/schema";
-import { toRouteErrorMessage } from "../../../db/route-error";
+import { saveSubmission } from "../../../db/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -30,27 +28,21 @@ export async function POST(request: Request) {
       return Response.json({ error: `Missing: ${missing.join(", ")}` }, { status: 400 });
     }
 
-    const db = await getDb();
-    const [row] = await db
-      .insert(providerApplications)
-      .values({
-        agencyName,
-        registrationNumber,
-        kdnLicenceNumber,
-        contactName,
-        contactEmail,
-        contactPhone,
-        servicesOffered,
-        coverageAreas,
-        headcount,
-      })
-      .returning();
+    const reference = await saveSubmission("safemy_provider_applications", {
+      agency_name: agencyName,
+      registration_number: registrationNumber,
+      kdn_licence_number: kdnLicenceNumber,
+      contact_name: contactName,
+      contact_email: contactEmail,
+      contact_phone: contactPhone,
+      services_offered: servicesOffered,
+      coverage_areas: coverageAreas,
+      headcount,
+    });
 
-    return Response.json({ application: row }, { status: 201 });
+    return Response.json({ reference }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      { error: toRouteErrorMessage(error, "provider_applications") },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    return Response.json({ error: message }, { status: 500 });
   }
 }

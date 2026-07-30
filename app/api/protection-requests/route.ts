@@ -1,6 +1,4 @@
-import { getDb } from "../../../db";
-import { protectionRequests } from "../../../db/schema";
-import { toRouteErrorMessage } from "../../../db/route-error";
+import { saveSubmission } from "../../../db/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -32,28 +30,22 @@ export async function POST(request: Request) {
       return Response.json({ error: `Missing or invalid: ${missing.join(", ")}` }, { status: 400 });
     }
 
-    const db = await getDb();
-    const [row] = await db
-      .insert(protectionRequests)
-      .values({
-        name,
-        phone,
-        email,
-        serviceType,
-        location,
-        startDate,
-        startTime,
-        durationHours,
-        professionalsCount,
-        notes,
-      })
-      .returning();
+    const reference = await saveSubmission("safemy_protection_requests", {
+      name,
+      phone,
+      email,
+      service_type: serviceType,
+      location,
+      start_date: startDate,
+      start_time: startTime,
+      duration_hours: durationHours,
+      professionals_count: professionalsCount,
+      notes,
+    });
 
-    return Response.json({ request: row }, { status: 201 });
+    return Response.json({ reference }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      { error: toRouteErrorMessage(error, "protection_requests") },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    return Response.json({ error: message }, { status: 500 });
   }
 }
