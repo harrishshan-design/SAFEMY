@@ -10,8 +10,14 @@ export function SiteFooter() {
       <div className="footer-links">
         <div>
           <b>Platform</b>
+          <Link href="/safety">Free safety toolkit</Link>
+          <Link href="/plans">Plans &amp; pricing</Link>
           <Link href="/request">Request protection</Link>
           <Link href="/pilot">Join the pilot</Link>
+        </div>
+        <div>
+          <b>For organisations</b>
+          <Link href="/partners">Partner with SafeMY</Link>
           <Link href="/providers/apply">Register as a provider</Link>
           <Link href="/business">SafeMY for Business</Link>
         </div>

@@ -7,8 +7,8 @@ export function SiteNav() {
         <span className="brand-mark">S</span><span>Safe<span>MY</span></span>
       </Link>
       <div className="nav-links">
-        <Link href="/#how-it-works">How it works</Link>
-        <Link href="/#map">Safety map</Link>
+        <Link href="/safety">Free safety toolkit</Link>
+        <Link href="/plans">Plans</Link>
         <Link href="/how-we-verify">Verification</Link>
         <Link href="/providers/apply">For providers</Link>
       </div>

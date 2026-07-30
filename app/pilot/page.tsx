@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { SiteNav } from "../components/SiteNav";
 import { SiteFooter } from "../components/SiteFooter";
 
 const interestOptions = [
-  "Customer looking for protection services",
+  "Tier 3 — bodyguards, drivers, event security (available to request today)",
+  "Tier 2 — ride home, walking companion, event escort, family monitoring (roadmap)",
   "Guardian / family member",
-  "Community member interested in the safety map",
+  "Community member interested in hazard reports",
   "Security professional",
 ];
 
@@ -49,7 +51,7 @@ export default function PilotPage() {
       <section className="form-hero shell">
         <span className="kicker">KLANG VALLEY PILOT</span>
         <h1>Join the Klang Valley pilot.</h1>
-        <p>SafeMY is preparing a limited pilot with a small number of verified security agencies, starting in the Klang Valley. Sign up to be notified as coverage opens near you.</p>
+        <p>SafeMY is preparing a limited pilot with a small number of licensed security agencies, starting in the Klang Valley. If you&apos;re interested in the affordable Tier 2 services (ride home, walking companion, escort, family monitoring — see our <Link href="/plans">plans</Link>), this is how we&apos;ll notify you first once they open.</p>
       </section>
 
       <section className="shell form-shell">

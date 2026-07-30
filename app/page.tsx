@@ -28,6 +28,24 @@ const protectionServices = [
 
 const dutySteps = ["Assigned", "En route", "Arrived", "On duty", "Completed"];
 
+const tierTeasers = [
+  {
+    tier: "Tier 1", title: "Free", price: "RM0, for everyone", tone: "free",
+    points: ["Guardians & safety check-in — live today", "Emergency directory & safety tips — live today"],
+    cta: { href: "/safety", label: "Open the free toolkit →" },
+  },
+  {
+    tier: "Tier 2", title: "Affordable", price: "Priced for everyday situations", tone: "",
+    points: ["Verified ride home after dark — roadmap", "Walking companion & family monitoring — roadmap"],
+    cta: { href: "/pilot", label: "Join the pilot →" },
+  },
+  {
+    tier: "Tier 3", title: "Premium", price: "Est. from RM100/hr per professional", tone: "premium",
+    points: ["Bodyguards, drivers & event security — request today", "Executive protection & convoy — roadmap"],
+    cta: { href: "/request", label: "Request protection →" },
+  },
+];
+
 const proofGoals = [
   { value: "Klang Valley", label: "First pilot region" },
   { value: "Licensed only", label: "Every partner agency KDN-checked" },
@@ -51,6 +69,7 @@ const testimonials = [
 ];
 
 const faqs = [
+  { q: "Is any of this actually free?", a: "Yes. Your guardian list, safety check-in timer, emergency directory and safety tips are free permanently, work today in your browser, and need no account. See the free safety toolkit and our plans breakdown." },
   { q: "How fast does SOS actually respond?", a: "Our goal is to notify the guardians you've added within moments of tapping SOS. During this early pilot we don't have verified response-time data to share yet, and SOS does not replace calling 999 — in immediate danger, always call 999 first." },
   { q: "Are protection professionals really verified?", a: "SafeMY onboards licensed agencies, not independent individuals. Every partner agency we onboard is checked against company registration, KDN licence status, personnel identity, training and insurance before it appears as verified. See how we verify providers." },
   { q: "Can I cancel or change a booking?", a: "SafeMY doesn't process payments directly yet, so cancellation terms for a confirmed job are set by your assigned agency. See our cancellation and refund policy for how this works during the pilot." },
@@ -105,11 +124,11 @@ export default function Home() {
           <p>Request protection services from licensed Malaysian security agencies, track assignments in real time and keep trusted contacts informed.</p>
           <div className="hero-actions">
             <Link className="hero-btn primary" href="/request">Request Protection</Link>
-            <Link className="hero-btn secondary" href="/pilot">Join the Klang Valley Pilot</Link>
+            <Link className="hero-btn secondary" href="/safety">Open the Free Safety Toolkit</Link>
           </div>
           <p className="hero-disclaimer">Early-access platform. Service availability depends on verified partner coverage. For emergencies, call 999 — SafeMY does not replace police, ambulance or fire services.</p>
           <button className="text-book" onClick={() => setPanel("sos")}>Preview the SOS &amp; guardian experience <span>→</span></button>
-          <p className="pilot-line"><b>Now onboarding</b><br />customers and licensed agencies for our first Klang Valley pilot.</p>
+          <p className="pilot-line"><b>Everyone deserves to feel safe, regardless of their income.</b><br /><Link href="/plans">See the free, affordable and premium tiers →</Link></p>
         </div>
 
         <div className="phone-wrap" aria-label="SafeMY app preview">
@@ -148,6 +167,29 @@ export default function Home() {
         <div className="ticker-track">
           {[...activityFeed, ...activityFeed].map((item, i) => <span key={i} className="ticker-item">{item}</span>)}
         </div>
+      </section>
+
+      <section className="tiers-section shell reveal">
+        <div className="section-heading">
+          <div><span className="kicker">SAFETY FOR EVERYONE</span><h2>Free for everyone.<br />More when you need it.</h2></div>
+          <p>Everyone deserves to feel safe, regardless of their income. One platform, three layers — a free toolkit for everyone, affordable services on the roadmap, and premium protection you can request today.</p>
+        </div>
+        <div className="tiers-grid">
+          {tierTeasers.map((t) => (
+            <div key={t.tier} className={`tier-card ${t.tone}`}>
+              <span className="tier-badge">{t.tier}</span>
+              <h3>{t.title}</h3>
+              <div className="tier-price">{t.price}</div>
+              <ul className="tier-list">
+                {t.points.map((p) => <li key={p} className={p.includes("roadmap") ? "soon" : ""}>{p}</li>)}
+              </ul>
+              <Link className={`tier-cta ${t.tone === "free" ? "solid" : ""}`} href={t.cta.href}>{t.cta.label}</Link>
+            </div>
+          ))}
+        </div>
+        <p className="form-note" style={{ textAlign: "center", marginTop: 26 }}>
+          <Link href="/plans">See the full breakdown of what&apos;s live and what&apos;s roadmap →</Link>
+        </p>
       </section>
 
       <section id="protection" className="protection-section shell">
@@ -220,12 +262,42 @@ export default function Home() {
 
       <section id="map" className="map-section reveal">
         <div className="shell map-grid">
-          <div className="map-copy"><span className="kicker">ROADMAP <span className="roadmap-tag">After the pilot</span></span><h2>Your neighbourhood,<br />made visible.</h2><p>Once the core request-and-track workflow is reliable, we plan a living safety map built from verified community reports, road conditions, lighting and flood risk.</p><ul><li><b>Real-time local alerts</b><span>See what&apos;s happening around you now.</span></li><li><b>AI Safety Score</b><span>Understand an area at a glance.</span></li><li><b>Community verified</b><span>Useful updates from people nearby.</span></li></ul><Link href="/pilot">Join the pilot to get notified →</Link></div>
+          <div className="map-copy"><span className="kicker">ROADMAP <span className="roadmap-tag">After the pilot</span></span><h2>Your neighbourhood,<br />made visible.</h2><p>Once the core request-and-track workflow is reliable, we plan a map of hazards residents report — flooding, broken streetlighting, road hazards — shown as reported, with no area given a safety score or rating. Reports route toward the relevant local council, in the spirit of KPKT&apos;s Program Bandar Selamat.</p><ul><li><b>Hazard reports</b><span>Flooding, broken lights and road hazards, shown as reported and dated.</span></li><li><b>No area scores</b><span>We won&apos;t rate or rank neighbourhoods — that data doesn&apos;t exist responsibly in Malaysia today.</span></li><li><b>Your own journey, always</b><span>Live journey sharing and check-ins with your guardians, wherever you are.</span></li></ul><Link href="/pilot">Join the pilot to get notified →</Link></div>
           <div className="big-map">
             <span className="demo-badge">Preview — not live</span>
             <span className="map-road mr1"/><span className="map-road mr2"/><span className="map-road mr3"/><span className="map-road mr4"/>
             {mapPins.map(pin => <span key={pin.label} className={pin.className} style={pin.style}>{pin.label === "You" ? "●" : "!"}<em>{pin.label}</em></span>)}
-            <div className="map-score"><span>Example safety score</span><b>86<small>/100</small></b><i>Illustrative</i></div>
+            <div className="map-score"><span>Reported hazards</span><b>3</b><i>Illustrative — as reported, not verified</i></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="prevention-section reveal">
+        <div className="shell prevention-grid">
+          <div className="prevention-copy">
+            <span className="kicker">PREVENTION <span className="roadmap-tag">Roadmap</span></span>
+            <h2>The biggest opportunity<br />may not be bodyguards.</h2>
+            <p>Responding after something goes wrong matters — but helping someone avoid a bad situation in the first place could help far more people, at far lower cost. We want SafeMY to nudge people toward safer choices before they need an SOS at all.</p>
+            <ul className="prevention-points">
+              <li><b>We won&apos;t score or rank neighbourhoods.</b>Malaysia has no reliable street-level incident or lighting data today, and area &quot;danger&quot; labels have a documented history of unfairly targeting lower-income neighbourhoods elsewhere. We&apos;re not building that.</li>
+              <li><b>We&apos;ll report hazards, not rate places.</b>A broken streetlight or flooded road, reported and dated — aligned with KPKT&apos;s Program Bandar Selamat crime-prevention-through-design approach — is useful and defensible. A secret safety score is neither.</li>
+              <li><b>Your journey stays yours.</b>Guardians and a safety check-in timer are free and working today, whatever any map says about where you are. Live location sharing is roadmap.</li>
+            </ul>
+            <Link href="/pilot">Join the pilot to help shape this →</Link>
+          </div>
+          <div>
+            <div className="nudge-phone">
+              <span className="nudge-time">11:32 PM · illustrative</span>
+              <div className="nudge-bubble">
+                <p>You&apos;re on a check-in with Mak. Want to share your live route until you arrive?</p>
+                <p>We won&apos;t tell you a street is &quot;dangerous&quot; — we don&apos;t have data we&apos;d trust for that. This keeps someone you chose in the loop instead.</p>
+              </div>
+              <div className="nudge-actions">
+                <span>Share route</span>
+                <span>Start check-in</span>
+              </div>
+            </div>
+            <small className="nudge-caption">Illustrative — not a live feature. Concept only, pending the pilot.</small>
           </div>
         </div>
       </section>
