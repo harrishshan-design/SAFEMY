@@ -179,7 +179,7 @@ footer{border-top:1px solid var(--line);min-height:110px;display:flex;align-item
 .site-footer{display:block;min-height:0;padding-block:60px 30px;border-top:1px solid var(--line)}
 .footer-top{margin-bottom:36px}
 .footer-top p{font-size:12px;color:#6d7f7b;margin-top:10px;max-width:360px}
-.footer-links{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding-bottom:36px;border-bottom:1px solid var(--line)}
+.footer-links{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;padding-bottom:36px;border-bottom:1px solid var(--line)}
 .footer-links b{display:block;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#8a9693;margin-bottom:12px}
 .footer-links a{display:block;font-size:12px;color:#45635f;text-decoration:none;margin-bottom:8px}
 .footer-bottom{padding-top:20px}
@@ -201,3 +201,118 @@ footer{border-top:1px solid var(--line);min-height:110px;display:flex;align-item
 
 @media(max-width:900px){.field-grid{grid-template-columns:1fr}.footer-links{grid-template-columns:1fr 1fr}.verify-grid{grid-template-columns:1fr}.proof-goals-grid{grid-template-columns:repeat(2,1fr);gap:20px}}
 @media(max-width:600px){.form-card{padding:24px}.confirmation-card{padding:32px 22px}.footer-links{grid-template-columns:1fr}.admin-head{flex-direction:column;align-items:flex-start;gap:14px}}
+
+/* ——— Safety for Everyone: mission + tiers ——— */
+.mission-band{background:var(--deep);color:#fff;padding-block:70px}
+.mission-band .shell{max-width:900px;text-align:center}
+.mission-band .kicker{color:#8fc9b7}
+.mission-quote{font-family:var(--font-display);font-weight:500;font-size:clamp(30px,4.4vw,50px);line-height:1.08;letter-spacing:-1.5px;margin:16px 0 18px}
+.mission-band p{color:#b8cbc5;font-size:14px;line-height:1.75;max-width:640px;margin-inline:auto}
+.tiers-section{padding-block:110px}
+.tiers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.tier-card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:22px;background:#fff;padding:32px 28px;position:relative}
+.tier-card.free{background:#eff4ef;border-color:#cfded5}
+.tier-card.premium{background:var(--deep);color:#fff;border-color:var(--deep)}
+.tier-badge{display:inline-block;align-self:flex-start;font-size:9px;font-weight:900;letter-spacing:1.1px;text-transform:uppercase;padding:6px 11px;border-radius:99px;background:#dff1e9;color:#237f68}
+.tier-card.premium .tier-badge{background:rgba(189,235,220,.16);color:var(--mint)}
+.tier-card h3{font:500 30px/1.05 var(--font-display);margin:18px 0 6px;color:inherit}
+.tier-price{font-size:12px;font-weight:800;color:#357869;margin-bottom:16px}
+.tier-card.premium .tier-price{color:#8fc9b7}
+.tier-card>p{font-size:13px;line-height:1.7;color:#687b77;margin:0 0 20px}
+.tier-card.premium>p{color:#b8cbc5}
+.tier-list{list-style:none;padding:0;margin:0 0 26px;flex:1;display:grid;gap:9px}
+.tier-list li{font-size:12.5px;line-height:1.5;padding-left:22px;position:relative;color:#3f5b57}
+.tier-card.premium .tier-list li{color:#d6e5e0}
+.tier-list li:before{content:"✓";position:absolute;left:0;top:0;color:#2a8a6d;font-weight:900}
+.tier-card.premium .tier-list li:before{color:var(--mint)}
+.tier-list li.soon{color:#8a9693}
+.tier-card.premium .tier-list li.soon{color:#8ba39d}
+.tier-list li.soon:before{content:"○";color:#b3c2bd;font-weight:400}
+.tier-cta{display:inline-flex;justify-content:center;align-items:center;border-radius:999px;padding:14px 20px;font-weight:800;font-size:12.5px;text-decoration:none;border:1px solid var(--deep);color:var(--deep);background:transparent}
+.tier-cta.solid{background:var(--deep);color:#fff}
+.tier-card.premium .tier-cta{background:var(--mint);color:var(--deep);border-color:var(--mint)}
+.subsidy-note{margin-top:26px;border:1px solid var(--line);border-radius:18px;padding:24px 28px;background:#fff;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.subsidy-note>span{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#dff1e9;color:#237f68;font-size:20px}
+.subsidy-note p{margin:0;font-size:12.5px;line-height:1.75;color:#687b77}
+.subsidy-note b{color:var(--deep)}
+
+/* ——— Prevention ——— */
+.prevention-section{background:var(--cream);padding-block:110px}
+.prevention-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+.prevention-copy h2{font-size:52px;line-height:.99}
+.prevention-copy>p{font-size:14px;line-height:1.75;color:#6d7d78;max-width:520px}
+.prevention-points{list-style:none;padding:0;margin:26px 0 30px;display:grid;gap:14px}
+.prevention-points li{padding-left:30px;position:relative;font-size:12.5px;line-height:1.65;color:#5d716e}
+.prevention-points li:before{content:"";position:absolute;left:0;top:6px;width:14px;height:14px;border-radius:50%;border:2px solid #8dc3b1}
+.prevention-points b{display:block;color:var(--deep);font-size:13px;margin-bottom:2px}
+.nudge-phone{background:#062019;border-radius:26px;padding:30px 26px;box-shadow:0 30px 60px #0b3d3630;position:relative}
+.nudge-time{font-family:ui-monospace,monospace;font-size:11px;color:#7fb3a2;letter-spacing:.5px}
+.nudge-bubble{margin-top:16px;background:rgba(189,235,220,.09);border:1px solid rgba(189,235,220,.22);border-radius:18px;padding:20px}
+.nudge-bubble p{margin:0;color:#e4f1ec;font-size:14px;line-height:1.6}
+.nudge-bubble p+p{margin-top:12px;color:#a8c9be;font-size:12.5px}
+.nudge-actions{display:flex;gap:8px;margin-top:16px}
+.nudge-actions span{font-size:10px;font-weight:800;padding:9px 13px;border-radius:99px;background:rgba(189,235,220,.14);color:var(--mint)}
+.nudge-caption{display:block;margin-top:16px;text-align:center;font-size:10px;color:#7d9b91;letter-spacing:.3px}
+
+/* ——— Partner types ——— */
+.partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:34px 0}
+.partner-card{border:1px solid var(--line);border-radius:18px;padding:24px;background:#fff}
+.partner-card span{font-size:22px}
+.partner-card h3{font:500 19px var(--font-display);margin:12px 0 8px}
+.partner-card p{font-size:12px;line-height:1.65;color:#687b77;margin:0}
+
+/* ——— Free toolkit (/safety) ——— */
+.toolkit-shell{max-width:840px;padding-block:0 100px}
+.tool-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:34px;margin-bottom:20px}
+.tool-head{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;margin-bottom:24px}
+.tool-num{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#eff4ef;color:#4e706c;font-size:11px;font-weight:900}
+.tool-head h2{font:500 27px var(--font-display);margin:0 0 6px;letter-spacing:-.5px}
+.tool-head p{margin:0;font-size:13px;line-height:1.7;color:#687b77}
+.honesty-note{background:#f3efe3;border:1px solid #e6ddc4;border-radius:14px;padding:14px 18px;font-size:11.5px;line-height:1.7;color:#6a5f3f;margin-bottom:22px}
+.tool-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #c3d3cd;border-radius:11px;padding:11px 16px;background:#fff;color:var(--deep);font-weight:800;font-size:12px;text-decoration:none;cursor:pointer}
+.tool-btn.primary{background:var(--deep);color:#fff;border-color:var(--deep)}
+.tool-btn.ghost{border-color:#dbe4e0;color:#8a9693}
+.tool-btn.alert{background:#fdeeec;border-color:#f0b5aa;color:#a8412f}
+.tool-btn.emergency{background:var(--coral);border-color:var(--coral);color:#fff}
+.guardian-form{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:22px}
+.guardian-form .tool-btn{height:44px}
+.tool-empty{font-size:12.5px;color:#8a9693;line-height:1.7;background:#f7f9f7;border-radius:12px;padding:18px;margin:0}
+.guardian-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.guardian-list li{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.guardian-list b{display:block;font-size:14px}
+.guardian-list small{display:block;font-size:11.5px;color:#8a9693;margin-top:2px}
+.guardian-actions{display:flex;gap:8px;flex-wrap:wrap}
+.checkin-setup{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+.checkin-setup .tool-btn{height:44px}
+.checkin-live{text-align:center;background:#eff4ef;border-radius:18px;padding:32px 24px}
+.checkin-live.overdue{background:#fdeeec;border:1px solid #f3c3ba}
+.checkin-clock{font-family:var(--font-display);font-size:52px;line-height:1;color:var(--deep);font-variant-numeric:tabular-nums}
+.checkin-live.overdue .checkin-clock{font-size:34px;color:#a8412f}
+.checkin-live p{font-size:13px;color:#5d716e;margin:14px 0 20px;line-height:1.65}
+.checkin-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.directory-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.directory-list li{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.directory-list b{display:block;font-size:14px}
+.directory-list small{display:block;font-size:11.5px;color:#687b77;margin-top:3px;line-height:1.5}
+.directory-call{display:inline-flex;align-items:center;gap:8px;background:var(--deep);color:#fff;border-radius:11px;padding:11px 18px;font-weight:800;font-size:13px;text-decoration:none;font-variant-numeric:tabular-nums}
+.directory-list li.critical{border-color:#f0b5aa;background:#fdf5f4}
+.directory-list li.critical .directory-call{background:var(--coral)}
+.tips-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.tips-list li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;font-size:13px;line-height:1.7;color:#5d716e}
+.tips-list i{width:24px;height:24px;border-radius:50%;background:#eff4ef;color:#4e706c;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:900;margin-top:2px}
+.tips-list b{color:var(--deep)}
+
+@media(max-width:900px){
+  .tiers-grid,.partner-grid{grid-template-columns:1fr}
+  .prevention-grid{grid-template-columns:1fr;gap:44px}
+  .guardian-form,.checkin-setup{grid-template-columns:1fr}
+  .subsidy-note{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .tiers-section,.prevention-section{padding-block:70px}
+  .prevention-copy h2{font-size:38px}
+  .tool-card{padding:24px 20px}
+  .tool-head{grid-template-columns:1fr;gap:12px}
+  .guardian-list li,.directory-list li{flex-direction:column;align-items:flex-start}
+  .checkin-clock{font-size:42px}
+}
