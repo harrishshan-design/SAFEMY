@@ -30,8 +30,8 @@ export default function BusinessPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { enquiry?: unknown; error?: string };
-      if (!res.ok || !data.enquiry) throw new Error(data.error ?? "Something went wrong. Please try again.");
+      const data = (await res.json()) as { reference?: string; error?: string };
+      if (!res.ok || !data.reference) throw new Error(data.error ?? "Something went wrong. Please try again.");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");

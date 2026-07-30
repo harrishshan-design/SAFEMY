@@ -1,16 +1,30 @@
-import { desc } from "drizzle-orm";
-import { requireChatGPTUser, chatGPTSignOutPath } from "../chatgpt-auth";
-import { getDb } from "../../db";
-import { protectionRequests, pilotSignups, providerApplications, businessEnquiries } from "../../db/schema";
+import { getChatGPTUser, chatGPTSignOutPath } from "../chatgpt-auth";
+import { SUPABASE_DASHBOARD_URL } from "../../db/supabase";
 
 export const dynamic = "force-dynamic";
 
-// Server-side allowlist. SIWC only proves identity, not that this person
-// should see submitted PII — see README's "Workspace Auth Headers" section.
+// Server-side allowlist. Identity headers only exist on the workspace
+// deployment; on other hosts (e.g. Vercel) this page degrades to an
+// informational panel and never exposes submissions.
 const ADMIN_EMAILS = ["harrishg.amk@gmail.com"];
 
 export default async function AdminPage() {
-  const user = await requireChatGPTUser("/admin");
+  const user = await getChatGPTUser();
+
+  if (!user) {
+    return (
+      <main className="shell admin-page">
+        <span className="kicker">SAFEMY ADMIN · INTERNAL</span>
+        <h1>Admin access</h1>
+        <p className="form-note" style={{ maxWidth: 560 }}>
+          Sign-in for this page is only available on the SafeMY workspace
+          deployment. Submissions are reviewed in the Supabase dashboard
+          (safemy_* tables), which requires its own login. Nothing is shown
+          here without authentication.
+        </p>
+      </main>
+    );
+  }
 
   if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     return (
@@ -22,48 +36,25 @@ export default async function AdminPage() {
     );
   }
 
-  const db = await getDb();
-  const [requests, pilots, applications, enquiries] = await Promise.all([
-    db.select().from(protectionRequests).orderBy(desc(protectionRequests.createdAt)).limit(50),
-    db.select().from(pilotSignups).orderBy(desc(pilotSignups.createdAt)).limit(50),
-    db.select().from(providerApplications).orderBy(desc(providerApplications.createdAt)).limit(50),
-    db.select().from(businessEnquiries).orderBy(desc(businessEnquiries.createdAt)).limit(50),
-  ]);
-
   return (
     <main className="shell admin-page">
       <div className="admin-head">
         <div><span className="kicker">SAFEMY ADMIN · INTERNAL</span><h1>Submissions</h1></div>
         <div><span>{user.displayName}</span><a href={chatGPTSignOutPath("/admin")}>Sign out</a></div>
       </div>
-      <p className="form-note">Reviewing and assigning requests to a licensed partner agency is a manual step for now — nothing here auto-dispatches anyone.</p>
-
-      <AdminSection title="Protection requests" rows={requests} columns={["id", "createdAt", "status", "name", "phone", "email", "serviceType", "location", "startDate", "startTime", "durationHours", "professionalsCount"]} />
-      <AdminSection title="Pilot signups" rows={pilots} columns={["id", "createdAt", "name", "email", "phone", "interest", "area"]} />
-      <AdminSection title="Provider applications" rows={applications} columns={["id", "createdAt", "status", "agencyName", "registrationNumber", "kdnLicenceNumber", "contactName", "contactEmail", "contactPhone", "coverageAreas"]} />
-      <AdminSection title="Business enquiries" rows={enquiries} columns={["id", "createdAt", "status", "companyName", "contactName", "contactEmail", "teamSize"]} />
+      <p className="form-note" style={{ maxWidth: 620 }}>
+        Intake submissions are stored in Supabase with insert-only public
+        access — reviewing them requires the Supabase dashboard login. Open the
+        table editor below and work through the safemy_* tables:
+        protection requests, pilot signups, provider applications and business
+        enquiries. Reviewing and assigning requests to a licensed partner
+        agency is a manual step — nothing auto-dispatches anyone.
+      </p>
+      <p>
+        <a href={SUPABASE_DASHBOARD_URL} target="_blank" rel="noreferrer">
+          Open the Supabase table editor →
+        </a>
+      </p>
     </main>
-  );
-}
-
-function AdminSection({ title, rows, columns }: { title: string; rows: Record<string, unknown>[]; columns: string[] }) {
-  return (
-    <section className="admin-section">
-      <h2>{title} <span>({rows.length})</span></h2>
-      {rows.length === 0 ? (
-        <p className="form-note">No submissions yet.</p>
-      ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead><tr>{columns.map((c) => <th key={c}>{c}</th>)}</tr></thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={String(row.id)}>{columns.map((c) => <td key={c}>{String(row[c] ?? "")}</td>)}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
   );
 }
