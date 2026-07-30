@@ -1,4 +1,5 @@
 import { saveSubmission } from "../../../db/supabase";
+import { notify, ADMIN_NOTIFY_EMAIL } from "../../../db/notify";
 
 export async function POST(request: Request) {
   try {
@@ -41,6 +42,15 @@ export async function POST(request: Request) {
       duration_hours: durationHours,
       professionals_count: professionalsCount,
       notes,
+    });
+
+    await notify({
+      to: ADMIN_NOTIFY_EMAIL,
+      subject: `New protection request: ${reference}`,
+      body: `${name} (${phone}, ${email}) requested ${serviceType} at ${location} on ${startDate} ${startTime} for ${durationHours}h, ${professionalsCount} professional(s).\n\nNotes: ${notes || "(none)"}\n\nReview in the admin dashboard.`,
+      category: "new_protection_request",
+      relatedTable: "safemy_protection_requests",
+      relatedId: reference,
     });
 
     return Response.json({ reference }, { status: 201 });

@@ -14,6 +14,14 @@ export default function ProviderApplyPage() {
     setStatus("submitting");
     setError("");
     const form = new FormData(e.currentTarget);
+    const password = String(form.get("password") ?? "");
+    const confirm = String(form.get("confirm") ?? "");
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      setStatus("error");
+      return;
+    }
+
     const body = {
       agencyName: form.get("agencyName"),
       registrationNumber: form.get("registrationNumber"),
@@ -24,6 +32,7 @@ export default function ProviderApplyPage() {
       servicesOffered: form.get("servicesOffered"),
       coverageAreas: form.get("coverageAreas"),
       headcount: form.get("headcount"),
+      password,
     };
 
     try {
@@ -47,7 +56,7 @@ export default function ProviderApplyPage() {
       <section className="form-hero shell">
         <span className="kicker">FOR LICENSED SECURITY AGENCIES</span>
         <h1>Register as a licensed provider.</h1>
-        <p>SafeMY onboards licensed Malaysian security agencies, not independent individuals. Read <Link href="/how-we-verify">how we verify providers</Link> before applying — every application is checked manually against your KDN licence and company registration before approval.</p>
+        <p>SafeMY onboards licensed Malaysian security agencies, not independent individuals. Read <Link href="/how-we-verify">how we verify providers</Link> before applying — every application is checked manually against your KDN licence and company registration before approval. Submitting this form also creates your agency login for the <Link href="/agency/login">partner portal</Link>, which unlocks once we approve you.</p>
       </section>
 
       <section className="shell form-shell">
@@ -56,6 +65,7 @@ export default function ProviderApplyPage() {
             <span className="modal-icon">✓</span>
             <h2>Application received.</h2>
             <p>Our team will verify your company registration and KDN licence before following up. Verification typically requires supporting documents by email — we&apos;ll reach out with next steps.</p>
+            <p className="form-note">Check your inbox to confirm your email address, then sign in any time at <Link href="/agency/login">the partner portal</Link> to see your application status.</p>
           </div>
         ) : (
           <form className="form-card" onSubmit={handleSubmit}>
@@ -69,6 +79,8 @@ export default function ProviderApplyPage() {
               <label className="field"><span>Approximate headcount</span><input name="headcount" placeholder="e.g. 25 personnel" /></label>
               <label className="field wide"><span>Services offered</span><textarea name="servicesOffered" required placeholder="e.g. Close protection, event security, security drivers" /></label>
               <label className="field wide"><span>Coverage areas</span><textarea name="coverageAreas" required placeholder="e.g. Klang Valley, Petaling Jaya, KLCC" /></label>
+              <label className="field"><span>Set a password for your partner login</span><input name="password" type="password" required minLength={8} placeholder="At least 8 characters" /></label>
+              <label className="field"><span>Confirm password</span><input name="confirm" type="password" required minLength={8} placeholder="Repeat password" /></label>
             </div>
             {status === "error" && <p className="form-error">{error}</p>}
             <button className="form-submit" type="submit" disabled={status === "submitting"}>

@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/advance-statuses", "schedule": "*/10 * * * *" }
+  ]
+}
