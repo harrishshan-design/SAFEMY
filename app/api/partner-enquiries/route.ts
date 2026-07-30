@@ -1,4 +1,5 @@
 import { saveSubmission } from "../../../db/supabase";
+import { notify, ADMIN_NOTIFY_EMAIL } from "../../../db/notify";
 
 export async function POST(request: Request) {
   try {
@@ -30,6 +31,15 @@ export async function POST(request: Request) {
       contact_phone: contactPhone,
       people_served: peopleServed,
       interest,
+    });
+
+    await notify({
+      to: ADMIN_NOTIFY_EMAIL,
+      subject: `New partner enquiry: ${organisationName}`,
+      body: `${organisationName} (${organisationType}) — ${contactName}, ${contactEmail}, ${contactPhone}.\n\nPeople served: ${peopleServed || "(not given)"}\nInterested in: ${interest || "(not given)"}\n\nReview in the admin dashboard.`,
+      category: "new_partner_enquiry",
+      relatedTable: "safemy_partner_enquiries",
+      relatedId: reference,
     });
 
     return Response.json({ reference }, { status: 201 });

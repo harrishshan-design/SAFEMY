@@ -1,4 +1,5 @@
 import { saveSubmission } from "../../../db/supabase";
+import { notify, ADMIN_NOTIFY_EMAIL } from "../../../db/notify";
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +28,15 @@ export async function POST(request: Request) {
       contact_phone: contactPhone,
       team_size: teamSize,
       message,
+    });
+
+    await notify({
+      to: ADMIN_NOTIFY_EMAIL,
+      subject: `New business enquiry: ${companyName}`,
+      body: `${companyName} (${contactName}, ${contactEmail}, ${contactPhone}) sent a business enquiry.\n\nTeam size: ${teamSize || "(not given)"}\nMessage: ${message || "(none)"}\n\nReview in the admin dashboard.`,
+      category: "new_business_enquiry",
+      relatedTable: "safemy_business_enquiries",
+      relatedId: reference,
     });
 
     return Response.json({ reference }, { status: 201 });
