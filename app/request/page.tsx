@@ -78,6 +78,7 @@ function RequestForm() {
         <h2>Request received.</h2>
         <p>Reference <b>{reference}</b>. Your request is <span className="status-pill">pending review</span>. A member of the SafeMY team will contact you within 1–2 business days to confirm availability, licensed-agency assignment and final pricing.</p>
         <p className="form-note">No professional has been assigned yet, and no payment has been taken. This is not a confirmed booking.</p>
+        <a className="tool-btn primary" href={`/track?ref=${encodeURIComponent(reference)}`}>Track this request →</a>
       </div>
     );
   }

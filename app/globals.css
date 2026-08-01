@@ -158,6 +158,7 @@ footer{border-top:1px solid var(--line);min-height:110px;display:flex;align-item
 .confirmation-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:48px;text-align:center}
 .confirmation-card h2{font-size:32px;margin:16px 0 12px}
 .confirmation-card p{font-size:13px;line-height:1.7;color:#5d716e;max-width:480px;margin-inline:auto}
+.confirmation-card .tool-btn{margin-top:20px}
 .status-pill{display:inline-block;background:#f3efe3;color:#7a6a3a;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px}
 
 /* Legal / doc pages */
@@ -223,6 +224,13 @@ footer{border-top:1px solid var(--line);min-height:110px;display:flex;align-item
 .status-pill.status-completed{background:#e9f0eb;color:#2f6350}
 .status-pill.status-declined,.status-pill.status-cancelled{background:#fdeeec;color:#a8412f}
 .agency-section-heading{font:500 18px var(--font-display);margin:32px 0 14px}
+.location-share{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.location-share .honesty-note{margin-bottom:12px}
+.location-share .admin-request-actions{border-top:none;margin-top:0;padding-top:0;align-items:center}
+.live-map-canvas{width:100%;height:340px;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.track-card{border:1px solid var(--line);border-radius:16px;padding:24px 26px;background:#fff;margin-top:22px}
+.track-card h2{font:500 20px var(--font-display);margin:0 0 4px}
+.track-card .track-meta{font-size:12.5px;color:#687b77;margin:0 0 18px}
 
 @media(max-width:900px){.field-grid{grid-template-columns:1fr}.footer-links{grid-template-columns:1fr 1fr}.verify-grid{grid-template-columns:1fr}.proof-goals-grid{grid-template-columns:repeat(2,1fr);gap:20px}}
 @media(max-width:600px){.form-card{padding:24px}.confirmation-card{padding:32px 22px}.footer-links{grid-template-columns:1fr}.admin-head{flex-direction:column;align-items:flex-start;gap:14px}}
