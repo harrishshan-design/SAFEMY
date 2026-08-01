@@ -229,6 +229,9 @@ footer{border-top:1px solid var(--line);min-height:110px;display:flex;align-item
 .status-pill.status-completed{background:#e9f0eb;color:#2f6350}
 .status-pill.status-declined,.status-pill.status-cancelled{background:#fdeeec;color:#a8412f}
 .agency-section-heading{font:500 18px var(--font-display);margin:32px 0 14px}
+.location-share{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.location-share .honesty-note{margin-bottom:12px}
+.location-share .admin-request-actions{border-top:none;margin-top:0;padding-top:0;align-items:center}
 
 @media(max-width:900px){.field-grid{grid-template-columns:1fr}.footer-links{grid-template-columns:1fr 1fr}.verify-grid{grid-template-columns:1fr}.proof-goals-grid{grid-template-columns:repeat(2,1fr);gap:20px}}
 @media(max-width:600px){.form-card{padding:24px}.confirmation-card{padding:32px 22px}.footer-links{grid-template-columns:1fr}.admin-head{flex-direction:column;align-items:flex-start;gap:14px}}

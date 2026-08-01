@@ -1,6 +1,7 @@
 import { saveSubmission } from "../../../db/supabase";
 import { notify, ADMIN_NOTIFY_EMAIL } from "../../../db/notify";
 import { hashTrackingToken, makeTrackingToken, validCoordinates } from "../../../db/matching";
+import { createSupabaseServerClient } from "../../../db/supabase-server";
 
 const VALID_GENDERS = ["female", "male", "non_binary", "prefer_not_to_say"];
 const VALID_GENDER_PREFERENCES = ["same_gender", "female", "male", "no_preference"];
@@ -40,6 +41,11 @@ export async function POST(request: Request) {
       return Response.json({ error: `Missing or invalid: ${missing.join(", ")}` }, { status: 400 });
     }
 
+    // Server-verified session lookup — never trust a client-supplied
+    // customer id, or anyone could claim ownership of someone else's request.
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     const trackingToken = makeTrackingToken();
     const trackingTokenHash = await hashTrackingToken(trackingToken);
     const reference = await saveSubmission("safemy_protection_requests", {
@@ -57,6 +63,7 @@ export async function POST(request: Request) {
       pickup_lat: pickup?.lat ?? null,
       pickup_lng: pickup?.lng ?? null,
       tracking_token_hash: trackingTokenHash,
+      customer_user_id: user?.id ?? null,
       notes,
     });
 
