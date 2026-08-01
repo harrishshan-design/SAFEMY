@@ -16,9 +16,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!VALID_STATUSES.includes(status)) {
       return Response.json({ error: "Invalid status" }, { status: 400 });
     }
+    const trackingEnded = ["completed", "declined", "cancelled"].includes(status);
     const { data, error } = await supabase
       .from("safemy_protection_requests")
-      .update({ status })
+      .update({
+        status,
+        ...(trackingEnded ? { tracking_enabled: false, tracking_ended_at: new Date().toISOString() } : {}),
+      })
       .eq("id", id)
       .select("reference, email, service_type")
       .single();

@@ -28,7 +28,7 @@ function makeReference(): string {
 // rather than asking the database to return the inserted row.
 export async function saveSubmission(
   table: SubmissionTable,
-  row: Record<string, string | number>,
+  row: Record<string, string | number | boolean | null>,
 ): Promise<string> {
   const reference = makeReference();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {

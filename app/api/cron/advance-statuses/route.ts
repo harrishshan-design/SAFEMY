@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const { data: completingNow, error: completeError } = await supabase
     .from("safemy_protection_requests")
-    .update({ status: "completed" })
+    .update({ status: "completed", tracking_enabled: false, tracking_ended_at: nowIso })
     .in("status", ["accepted", "in_progress"])
     .lte("end_at", nowIso)
     .select("id, reference, email, service_type");

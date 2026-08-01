@@ -18,6 +18,12 @@ interface ProtectionRequest {
   start_time: string;
   duration_hours: number;
   professionals_count: number;
+  customer_gender: string;
+  personnel_gender_preference: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  assigned_personnel_name: string;
+  tracking_enabled: boolean;
   notes: string;
   status: string;
   assigned_agency_id: number | null;
@@ -229,8 +235,10 @@ function RequestsTab({
             <div className="admin-request-body">
               <p><b>{r.name}</b> · {r.phone} · {r.email}</p>
               <p>{r.start_date} {r.start_time} · {r.duration_hours}h · {r.professionals_count} professional(s)</p>
+              <p className="matching-priority"><b>Personnel priority:</b> {formatGenderPreference(r.personnel_gender_preference, r.customer_gender)} · nearest verified available person next</p>
               {r.notes && <p className="form-note">{r.notes}</p>}
               {r.assigned_agency_name && <p className="form-note">Assigned: <b>{r.assigned_agency_name}</b></p>}
+              {r.assigned_personnel_name && <p className="form-note">Matched personnel: <b>{r.assigned_personnel_name}</b>{r.tracking_enabled ? " · live tracking active" : ""}</p>}
             </div>
             <div className="admin-request-actions">
               <label>
@@ -267,6 +275,17 @@ function RequestsTab({
       })}
     </div>
   );
+}
+
+function formatGenderPreference(preference: string, customerGender: string) {
+  if (preference === "same_gender") {
+    return customerGender && customerGender !== "prefer_not_to_say"
+      ? `same gender (${customerGender.replace("_", " ")})`
+      : "same gender when known";
+  }
+  if (preference === "female") return "female personnel";
+  if (preference === "male") return "male personnel";
+  return "no gender preference";
 }
 
 function ProvidersTab({ providers, onChange }: { providers: ProviderApplication[] | null; onChange: () => void }) {
