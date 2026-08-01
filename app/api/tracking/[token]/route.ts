@@ -1,41 +1,40 @@
-import { createSupabaseServiceClient } from "../../../../db/supabase-service";
+import { createSupabaseAnonClient } from "../../../../db/supabase-anon";
 import { hashTrackingToken, validCoordinates } from "../../../../db/matching";
 
-async function findRequest(token: string) {
+interface TrackingSnapshot {
+  job: {
+    id: number;
+    status: string;
+    tracking_enabled: boolean;
+  };
+  locations: Array<Record<string, unknown>>;
+}
+
+async function findSnapshot(token: string) {
   if (!/^[a-f0-9]{64}$/i.test(token)) return null;
-  const supabase = createSupabaseServiceClient();
+  const supabase = createSupabaseAnonClient();
   const tokenHash = await hashTrackingToken(token);
-  const { data } = await supabase
-    .from("safemy_protection_requests")
-    .select("id, reference, service_type, location, status, assigned_agency_name, assigned_personnel_id, assigned_personnel_name, tracking_enabled, tracking_started_at, tracking_ended_at, start_date, start_time")
-    .eq("tracking_token_hash", tokenHash)
-    .single();
-  return data ?? null;
+  const { data, error } = await supabase.rpc("safemy_tracking_snapshot", { p_token_hash: tokenHash });
+  if (error) throw error;
+  return (data as TrackingSnapshot | null) ?? null;
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const job = await findRequest(token);
-  if (!job) return Response.json({ error: "Tracking link not found" }, { status: 404 });
-
-  const supabase = createSupabaseServiceClient();
-  const { data: locations, error } = await supabase
-    .from("safemy_job_locations")
-    .select("actor_type, lat, lng, accuracy_m, updated_at")
-    .eq("request_id", job.id);
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  const snapshot = await findSnapshot(token);
+  if (!snapshot) return Response.json({ error: "Tracking link not found" }, { status: 404 });
 
   return Response.json(
-    { job, locations: locations ?? [], serverTime: new Date().toISOString() },
+    { ...snapshot, serverTime: new Date().toISOString() },
     { headers: { "Cache-Control": "no-store, private" } },
   );
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const job = await findRequest(token);
-  if (!job) return Response.json({ error: "Tracking link not found" }, { status: 404 });
-  if (!job.tracking_enabled || !["accepted", "in_progress"].includes(job.status)) {
+  const snapshot = await findSnapshot(token);
+  if (!snapshot) return Response.json({ error: "Tracking link not found" }, { status: 404 });
+  if (!snapshot.job.tracking_enabled || !["accepted", "in_progress"].includes(snapshot.job.status)) {
     return Response.json({ error: "Live tracking is not active for this assignment" }, { status: 409 });
   }
 
@@ -44,19 +43,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
   const accuracy = Number(payload.accuracy ?? 0);
   if (!point) return Response.json({ error: "Invalid coordinates" }, { status: 400 });
 
-  const supabase = createSupabaseServiceClient();
+  const supabase = createSupabaseAnonClient();
+  const tokenHash = await hashTrackingToken(token);
   const updatedAt = new Date().toISOString();
-  const { error } = await supabase.from("safemy_job_locations").upsert(
-    {
-      request_id: job.id,
-      actor_type: "customer",
-      lat: point.lat,
-      lng: point.lng,
-      accuracy_m: Number.isFinite(accuracy) && accuracy >= 0 ? accuracy : null,
-      updated_at: updatedAt,
-    },
-    { onConflict: "request_id,actor_type" },
-  );
+  const { data: updated, error } = await supabase.rpc("safemy_customer_update_location", {
+    p_token_hash: tokenHash,
+    p_lat: point.lat,
+    p_lng: point.lng,
+    p_accuracy_m: Number.isFinite(accuracy) && accuracy >= 0 ? accuracy : null,
+  });
   if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (!updated) return Response.json({ error: "Live tracking is no longer active" }, { status: 409 });
   return Response.json({ ok: true, serverTime: updatedAt });
 }
