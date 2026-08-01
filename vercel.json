@@ -1,5 +1,5 @@
 {
   "crons": [
-    { "path": "/api/cron/advance-statuses", "schedule": "*/10 * * * *" }
+    { "path": "/api/cron/advance-statuses", "schedule": "0 0 * * *" }
   ]
 }
