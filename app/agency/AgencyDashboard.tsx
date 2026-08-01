@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "../../db/supabase-browser";
 
@@ -29,6 +29,7 @@ interface Personnel {
   id: number;
   agency_id: number;
   full_name: string;
+  email: string | null;
   gender: string;
   role: string;
   service_types: string[];
@@ -39,6 +40,8 @@ interface Personnel {
   last_lat: number | null;
   last_lng: number | null;
   location_updated_at: string | null;
+  invited_at: string | null;
+  claimed_at: string | null;
 }
 
 export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; agencyName: string }) {
@@ -90,6 +93,7 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
   const pending = (rows ?? []).filter((r) => r.status === "assigned");
   const active = (rows ?? []).filter((r) => r.status === "accepted" || r.status === "in_progress");
   const history = (rows ?? []).filter((r) => ["completed", "declined", "cancelled"].includes(r.status));
+  const personnelById = new Map((personnel ?? []).map((p) => [p.id, p]));
 
   return (
     <main className="shell admin-page">
@@ -100,7 +104,7 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
 
       {error && <p className="form-error">{error}</p>}
       {notice && <p className="form-success">{notice}</p>}
-      <PersonnelRoster agencyId={agencyId} personnel={personnel} supabase={supabase} onChange={load} />
+      <PersonnelRoster personnel={personnel} onChange={load} />
       {!rows ? (
         <p className="form-note">Loading…</p>
       ) : rows.length === 0 ? (
@@ -134,7 +138,7 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
           {active.length === 0 ? <p className="tool-empty">Nothing active right now.</p> : (
             <div className="admin-table-wrap">
               <table className="admin-table">
-                <thead><tr><th>Reference</th><th>Service</th><th>Location</th><th>When</th><th>Assigned personnel</th><th>Status</th><th>Live tracking</th></tr></thead>
+                <thead><tr><th>Reference</th><th>Service</th><th>Location</th><th>When</th><th>Assigned personnel</th><th>Status</th><th>Live location</th></tr></thead>
                 <tbody>
                   {active.map((r) => (
                     <tr key={r.id}>
@@ -142,7 +146,7 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
                       <td>{r.start_date} {r.start_time} ({r.duration_hours}h)</td>
                       <td>{r.assigned_personnel_name || "Awaiting roster match"}<br/><small>{formatGenderPreference(r.personnel_gender_preference, r.customer_gender)}</small></td>
                       <td><span className={`status-pill status-${r.status}`}>{r.status.replace("_", " ")}</span></td>
-                      <td><PersonnelTracker requestId={r.id} enabled={r.tracking_enabled} /></td>
+                      <td><PersonnelLocationStatus personnel={r.assigned_personnel_id !== null ? personnelById.get(r.assigned_personnel_id) : undefined} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -180,20 +184,28 @@ function formatGenderPreference(preference: string, customerGender: string) {
   return "No gender preference";
 }
 
+// Read-only: the assigned guard shares their own live position from their
+// personnel account (see /personnel). The agency dashboard just reflects it.
+function PersonnelLocationStatus({ personnel }: { personnel: Personnel | undefined }) {
+  if (!personnel) return <small className="form-note" style={{ margin: 0 }}>Awaiting assignment</small>;
+  if (!personnel.location_updated_at) return <small className="form-note" style={{ margin: 0 }}>Not sharing yet</small>;
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(personnel.location_updated_at).getTime()) / 1000));
+  const label = seconds < 60 ? "just now" : seconds < 3600 ? `${Math.round(seconds / 60)}m ago` : `${Math.round(seconds / 3600)}h ago`;
+  const fresh = seconds < 120;
+  return <span className={`tool-btn ${fresh ? "live" : "ghost"}`} style={{ pointerEvents: "none", padding: "6px 10px", fontSize: "10.5px" }}>{fresh ? "Live" : "Stale"} · {label}</span>;
+}
+
 function PersonnelRoster({
-  agencyId,
   personnel,
-  supabase,
   onChange,
 }: {
-  agencyId: number;
   personnel: Personnel[] | null;
-  supabase: ReturnType<typeof createSupabaseBrowserClient>;
   onChange: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [resendingId, setResendingId] = useState<number | null>(null);
 
   async function addPersonnel(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -201,70 +213,54 @@ function PersonnelRoster({
     setBusy(true);
     setMessage("");
     const form = new FormData(formElement);
-    let point: GeolocationPosition | null = null;
-    if (navigator.geolocation) {
-      point = await new Promise((resolve) => navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }));
-    }
-    const { error } = await supabase.from("safemy_personnel").insert({
-      agency_id: agencyId,
-      full_name: String(form.get("fullName") ?? "").trim(),
-      gender: String(form.get("gender") ?? ""),
-      role: String(form.get("role") ?? "").trim(),
-      service_types: [String(form.get("serviceType") ?? "")],
-      years_experience: Number(form.get("experience") ?? 0),
-      verified: true,
-      available: true,
-      last_lat: point?.coords.latitude ?? null,
-      last_lng: point?.coords.longitude ?? null,
-      location_updated_at: point ? new Date().toISOString() : null,
+    const response = await fetch("/api/agency/personnel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fullName: form.get("fullName"),
+        email: form.get("email"),
+        gender: form.get("gender"),
+        role: form.get("role"),
+        serviceType: form.get("serviceType"),
+        experience: Number(form.get("experience") ?? 0),
+      }),
     });
+    const data = await response.json() as { error?: string; invited?: boolean };
     setBusy(false);
-    if (error) {
-      setMessage(error.message);
+    if (!response.ok) {
+      setMessage(data.error ?? "Could not add personnel.");
       return;
     }
-    setMessage(point ? "Personnel added with a live matching location." : "Personnel added. Update their GPS before using nearest matching.");
+    setMessage(data.invited ? "Personnel added — invite email sent." : "Personnel added, but the invite email couldn't be sent (email isn't configured yet). Use Resend invite once it is.");
     formElement.reset();
     onChange();
   }
 
+  async function resendInvite(id: number) {
+    setResendingId(id);
+    setMessage("");
+    const response = await fetch(`/api/agency/personnel/${id}/invite`, { method: "PATCH" });
+    const data = await response.json() as { error?: string; invited?: boolean };
+    setResendingId(null);
+    setMessage(!response.ok ? (data.error ?? "Could not resend invite.") : data.invited ? "Invite re-sent." : "Invite updated, but the email couldn't be sent.");
+    onChange();
+  }
+
   return <section className="agency-roster">
-    <div className="agency-roster-head"><div><span className="kicker">LIVE PERSONNEL ROSTER</span><h2>Available team</h2><p>Same-gender preference is ranked first, then the nearest available verified person.</p></div><button className="tool-btn primary" onClick={() => setOpen((value) => !value)}>{open ? "Close" : "Add personnel"}</button></div>
-    {open && <form className="roster-form" onSubmit={addPersonnel}><label>Full name<input name="fullName" required /></label><label>Gender<select name="gender" required><option value="female">Female</option><option value="male">Male</option><option value="non_binary">Non-binary</option></select></label><label>Role<input name="role" required placeholder="Close Protection Officer"/></label><label>Primary service<select name="serviceType"><option>Personal Bodyguard</option><option>Security Driver</option><option>Event Security</option><option>Female Protection</option></select></label><label>Experience (years)<input name="experience" type="number" min="0" defaultValue="1"/></label><button className="tool-btn primary" disabled={busy}>{busy ? "Adding…" : "Add with current GPS"}</button></form>}
+    <div className="agency-roster-head">
+      <div><span className="kicker">PERSONNEL ROSTER</span><h2>Available team</h2><p>Same-gender preference is ranked first, then the nearest available verified person. Each guard sets up their own login from the invite email and shares their own live location during active jobs.</p></div>
+      <button className="tool-btn primary" onClick={() => setOpen((value) => !value)}>{open ? "Close" : "Add personnel"}</button>
+    </div>
+    {open && <form className="roster-form" onSubmit={addPersonnel}>
+      <label>Full name<input name="fullName" required /></label>
+      <label>Email (for their invite)<input name="email" type="email" required /></label>
+      <label>Gender<select name="gender" required><option value="female">Female</option><option value="male">Male</option><option value="non_binary">Non-binary</option></select></label>
+      <label>Role<input name="role" required placeholder="Close Protection Officer"/></label>
+      <label>Primary service<select name="serviceType"><option>Personal Bodyguard</option><option>Security Driver</option><option>Event Security</option><option>Female Protection</option></select></label>
+      <label>Experience (years)<input name="experience" type="number" min="0" defaultValue="1"/></label>
+      <button className="tool-btn primary" disabled={busy}>{busy ? "Adding…" : "Add & send invite"}</button>
+    </form>}
     {message && <p className="form-note">{message}</p>}
-    {!personnel ? <p className="form-note">Loading roster…</p> : personnel.length === 0 ? <p className="tool-empty">Add verified personnel before accepting jobs so SafeMY can match by gender priority and live distance.</p> : <div className="roster-chips">{personnel.map((person) => <div key={person.id}><span>{person.full_name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><p><b>{person.full_name}</b><small>{person.gender.replace("_", " ")} · {person.role}</small><em>{person.last_lat !== null ? "GPS ready" : "GPS needed"}</em></p></div>)}</div>}
+    {!personnel ? <p className="form-note">Loading roster…</p> : personnel.length === 0 ? <p className="tool-empty">Add verified personnel before accepting jobs so SafeMY can match by gender priority and live distance.</p> : <div className="roster-chips">{personnel.map((person) => <div key={person.id}><span>{person.full_name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><p><b>{person.full_name}</b><small>{person.gender.replace("_", " ")} · {person.role}</small><em>{person.claimed_at ? "Account active" : person.invited_at ? "Invited — awaiting signup" : "Not invited"}</em>{!person.claimed_at && person.email && <button type="button" className="tool-btn ghost" style={{ marginTop: 6, fontSize: "10px", padding: "5px 9px" }} disabled={resendingId === person.id} onClick={() => resendInvite(person.id)}>{resendingId === person.id ? "Sending…" : "Resend invite"}</button>}</p></div>)}</div>}
   </section>;
-}
-
-function PersonnelTracker({ requestId, enabled }: { requestId: number; enabled: boolean }) {
-  const [status, setStatus] = useState<"idle" | "starting" | "live" | "error">("idle");
-  const watchId = useRef<number | null>(null);
-  const lastSentAt = useRef(0);
-
-  useEffect(() => () => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-  }, []);
-
-  function stop() {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-    watchId.current = null;
-    setStatus("idle");
-  }
-
-  function start() {
-    if (!enabled || !navigator.geolocation) {
-      setStatus("error");
-      return;
-    }
-    setStatus("starting");
-    watchId.current = navigator.geolocation.watchPosition(async (position) => {
-      const now = Date.now();
-      if (now - lastSentAt.current < 4000) return;
-      lastSentAt.current = now;
-      const response = await fetch(`/api/agency/requests/${requestId}/location`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy }) });
-      setStatus(response.ok ? "live" : "error");
-    }, () => setStatus("error"), { enableHighAccuracy: true, maximumAge: 3000, timeout: 12000 });
-  }
-
-  return <div className="personnel-tracker"><button className={`tool-btn ${status === "live" ? "live" : "ghost"}`} onClick={status === "live" ? stop : start} disabled={!enabled || status === "starting"}>{status === "live" ? "GPS live · Stop" : status === "starting" ? "Starting GPS…" : "Start live GPS"}</button>{status === "error" && <small>Allow location access and retry.</small>}</div>;
 }
