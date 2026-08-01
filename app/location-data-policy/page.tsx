@@ -17,6 +17,9 @@ export default function LocationDataPolicyPage() {
         <h2>Who can see it</h2>
         <p>Live location is visible only to the guardians you choose to share it with and, during an active assignment, the assigned agency and personnel. SafeMY staff can access it if needed to support you or investigate a safety concern.</p>
 
+        <h2>Google Maps</h2>
+        <p>SafeMY uses Google Maps to display pickup positions and directions between the assigned personnel and customer. When you load an embedded map or choose to open a location or route in Google Maps, the coordinates needed for that map are handled by Google under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and <a href="https://maps.google.com/help/terms_maps/">Google Maps Terms</a>. SafeMY does not add your name, phone number or email address to the Google Maps link.</p>
+
         <h2>When it stops</h2>
         <p>Location sharing stops automatically when the journey or assignment ends, or immediately if you turn it off yourself. We do not continue sharing your location after either of those points.</p>
 

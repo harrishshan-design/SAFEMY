@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { SiteNav } from "../../components/SiteNav";
 import { SiteFooter } from "../../components/SiteFooter";
 import { haversineKm } from "../../../db/matching";
+import { GoogleLiveMap } from "../../components/GoogleLiveMap";
+import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "../../../db/google-maps";
 
 interface TrackingLocation {
   actor_type: "customer" | "personnel";
@@ -84,6 +86,12 @@ export default function TrackingPage() {
   const personnel = snapshot?.locations.find((location) => location.actor_type === "personnel");
   const distance = useMemo(() => customer && personnel ? haversineKm(customer, personnel) : null, [customer, personnel]);
   const eta = distance === null ? null : Math.max(1, Math.ceil(distance * 2.2));
+  const mapsUrl = customer && personnel
+    ? googleMapsDirectionsUrl(personnel, customer)
+    : customer || personnel
+      ? googleMapsSearchUrl(customer ?? personnel as TrackingLocation)
+      : "https://www.google.com/maps/@?api=1&map_action=map&center=3.1390%2C101.6869&zoom=11";
+  const googleMapsEnabled = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
   const isFresh = (location?: TrackingLocation) => location ? Date.now() - new Date(location.updated_at).getTime() < 15000 : false;
 
   return (
@@ -104,11 +112,15 @@ export default function TrackingPage() {
 
           {!trackingActive ? <div className="tracking-wait-card"><span>{snapshot.job.status === "completed" ? "✓" : "…"}</span><div><h3>{snapshot.job.status === "completed" ? "Assignment completed" : "Waiting for acceptance"}</h3><p>{snapshot.job.status === "completed" ? "Live location sharing has ended for both parties." : "This page activates automatically after a licensed agency accepts the job and assigns personnel."}</p></div></div> : <>
             <div className="shared-map">
-              <span className="shared-map-road road-a"/><span className="shared-map-road road-b"/><span className="shared-route"/>
-              <div className={`shared-pin personnel ${isFresh(personnel) ? "fresh" : ""}`}><i>{snapshot.job.assigned_personnel_name ? snapshot.job.assigned_personnel_name.split(" ").map((part) => part[0]).join("").slice(0, 2) : "PRO"}</i><b>{snapshot.job.assigned_personnel_name || "Assigned personnel"}</b><small>{isFresh(personnel) ? "Live now" : "Waiting for GPS"}</small></div>
-              <div className={`shared-pin customer ${isFresh(customer) ? "fresh" : ""}`}><i>YOU</i><b>Your location</b><small>{gpsStatus === "denied" ? "Permission needed" : isFresh(customer) ? "Live now" : "Starting GPS"}</small></div>
+              {googleMapsEnabled ? <GoogleLiveMap customer={customer} personnel={personnel} personnelName={snapshot.job.assigned_personnel_name} /> : <>
+                <span className="shared-map-road road-a"/><span className="shared-map-road road-b"/><span className="shared-route"/>
+                <div className={`shared-pin personnel ${isFresh(personnel) ? "fresh" : ""}`}><i>{snapshot.job.assigned_personnel_name ? snapshot.job.assigned_personnel_name.split(" ").map((part) => part[0]).join("").slice(0, 2) : "PRO"}</i><b>{snapshot.job.assigned_personnel_name || "Assigned personnel"}</b><small>{isFresh(personnel) ? "Live now" : "Waiting for GPS"}</small></div>
+                <div className={`shared-pin customer ${isFresh(customer) ? "fresh" : ""}`}><i>YOU</i><b>Your location</b><small>{gpsStatus === "denied" ? "Permission needed" : isFresh(customer) ? "Live now" : "Starting GPS"}</small></div>
+              </>}
               <div className="shared-distance"><small>LIVE DISTANCE</small><b>{distance === null ? "—" : `${distance.toFixed(2)} km`}</b><span>{eta === null ? "Waiting for both locations" : `Approx. ${eta} min ETA`}</span></div>
             </div>
+
+            <div className="google-maps-actions"><div><b>Google Maps</b><span>{googleMapsEnabled ? "Embedded live map active" : "Live route opens securely in Google Maps"}</span></div><a className="google-maps-link primary" href={mapsUrl} target="_blank" rel="noreferrer">{customer && personnel ? "Open live route" : "Open live location"} ↗</a></div>
 
             <div className="shared-sync-grid">
               <LocationStatus label="Customer" location={customer} fresh={isFresh(customer)} />

@@ -347,3 +347,18 @@ footer{border-top:1px solid var(--line);min-height:110px;display:flex;align-item
   .guardian-list li,.directory-list li{flex-direction:column;align-items:flex-start}
   .checkin-clock{font-size:42px}
 }
+
+/* Google Maps integration */
+.location-capture-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0 7px}
+.location-capture-actions .tool-btn{margin:0}
+.google-maps-link{display:inline-flex;align-items:center;justify-content:center;min-height:38px;border:1px solid #cbdad4;border-radius:10px;padding:9px 14px;background:#fff;color:var(--deep);font-size:10px;font-weight:800;text-decoration:none;transition:.2s ease}
+.google-maps-link:hover{border-color:#71a897;transform:translateY(-1px)}
+.google-maps-link.primary{background:var(--deep);border-color:var(--deep);color:#fff;white-space:nowrap}
+.google-live-map{position:absolute;inset:0;width:100%;height:100%}
+.google-map-state{position:absolute;inset:0;display:grid;place-items:center;background:#e8efe9;color:#4e6661;font-size:11px;font-weight:800;z-index:1}
+.google-map-state.error{padding:24px;text-align:center;background:#f6f8f5;color:#7c4c43}
+.google-maps-actions{display:flex;align-items:center;justify-content:space-between;gap:18px;border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:#f7faf8;margin:12px 0}
+.google-maps-actions b,.google-maps-actions span{display:block}
+.google-maps-actions b{font-size:11px}
+.google-maps-actions span{font-size:8px;color:#73847f;margin-top:2px}
+@media(max-width:600px){.google-maps-actions{align-items:stretch;flex-direction:column}.google-maps-link.primary{width:100%}}

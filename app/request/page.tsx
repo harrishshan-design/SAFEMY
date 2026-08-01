@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SiteNav } from "../components/SiteNav";
 import { SiteFooter } from "../components/SiteFooter";
 import { EmergencyBanner } from "../components/EmergencyBanner";
+import { googleMapsSearchUrl } from "../../db/google-maps";
 
 const serviceOptions = ["Personal Bodyguard", "Security Driver", "Event Security", "Female Protection", "Other"];
 
@@ -142,7 +143,7 @@ function RequestForm() {
             <option value="no_preference">No preference — nearest first</option>
           </select>
         </label>
-        <div className="field wide location-capture"><span>Pickup GPS for nearest matching</span><button type="button" className="tool-btn ghost" onClick={useCurrentLocation} disabled={locationStatus === "loading"}>{locationStatus === "loading" ? "Getting location…" : locationStatus === "ready" ? "Location captured ✓" : "Use my current location"}</button><small>{locationStatus === "error" ? "Location permission was not granted. You can still submit; the agency will confirm your pickup point manually." : "Used only to rank nearby verified personnel and for live tracking after acceptance."}</small></div>
+        <div className="field wide location-capture"><span>Pickup GPS for nearest matching</span><div className="location-capture-actions"><button type="button" className="tool-btn ghost" onClick={useCurrentLocation} disabled={locationStatus === "loading"}>{locationStatus === "loading" ? "Getting location…" : locationStatus === "ready" ? "Location captured ✓" : "Use my current location"}</button>{pickup && <a className="google-maps-link" href={googleMapsSearchUrl(pickup)} target="_blank" rel="noreferrer">View pickup in Google Maps ↗</a>}</div><small>{locationStatus === "error" ? "Location permission was not granted. You can still submit; the agency will confirm your pickup point manually." : "Used only to rank nearby verified personnel and for live tracking after acceptance."}</small></div>
         <label className="field wide"><span>Anything else we should know?</span><textarea name="notes" placeholder="Event type, special requirements, etc." /></label>
       </div>
       {status === "error" && <p className="form-error">{error}</p>}

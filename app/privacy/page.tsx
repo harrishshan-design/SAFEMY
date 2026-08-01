@@ -23,6 +23,9 @@ export default function PrivacyPage() {
         <h2>Location data specifically</h2>
         <p>Live location sharing is opt-in per journey or assignment and stops automatically when that journey or assignment ends, or immediately if you turn it off. See our <a href="/location-data-policy">location data policy</a> for detail.</p>
 
+        <h2>Mapping services</h2>
+        <p>We use Google Maps to display locations and open directions. Google processes the map coordinates and related technical information needed to provide that service under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and <a href="https://maps.google.com/help/terms_maps/">Google Maps Terms</a>. We do not include your name, phone number or email address in Google Maps URLs.</p>
+
         <h2>How long we keep it</h2>
         <p>We retain request and assignment records for as long as needed to operate the service, resolve disputes and meet legal obligations, and we are working to define fixed retention periods before public launch. Live location history is retained only briefly after a journey ends unless needed for a safety investigation.</p>
 
