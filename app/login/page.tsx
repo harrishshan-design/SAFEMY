@@ -25,6 +25,7 @@ export default function LoginChooserPage() {
             <small>View jobs your agency assigned to you and share your live location during active jobs.</small>
           </Link>
         </div>
+        <p className="form-note">Agency partner? <Link href="/agency/login">Sign in here</Link>. SafeMY staff? <Link href="/admin/login">Sign in here</Link>.</p>
       </section>
 
       <SiteFooter />
