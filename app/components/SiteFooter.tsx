@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function SiteFooter() {
   return (
     <footer className="shell site-footer">
       <div className="footer-top">
-        <Link className="brand" href="/"><span className="brand-mark">S</span><span>Safe<span>MY</span></span></Link>
+        <Link className="brand" href="/" aria-label="SafeMY home"><Image className="brand-logo" src="/brand/safemy-logo.png" alt="SafeMY" width={1811} height={868} /></Link>
         <p>Early-access pilot connecting customers in the Klang Valley with licensed Malaysian security agencies.</p>
       </div>
       <div className="footer-links">

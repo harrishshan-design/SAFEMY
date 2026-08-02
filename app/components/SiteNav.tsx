@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function SiteNav() {
   return (
     <nav className="nav shell">
       <Link className="brand" href="/" aria-label="SafeMY home">
-        <span className="brand-mark">S</span><span>Safe<span>MY</span></span>
+        <Image className="brand-logo" src="/brand/safemy-logo.png" alt="SafeMY" width={1811} height={868} priority />
       </Link>
       <div className="nav-links">
         <Link href="/safety">Free safety toolkit</Link>
