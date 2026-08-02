@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "safemy-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "safemy-vite",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "dev", "--port", "5173"],
+      "port": 5173
+    },
+    {
+      "name": "vigil-bundle",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-l", "5180", "C:\\Users\\ARVIND~1\\AppData\\Local\\Temp\\claude\\C--Users-Arvind-Govindasamy-Documents-SafeMy--claude-worktrees-wow-safety-security-booking-app-ab159c\\40848a3c-b87f-4d97-8235-de9d81824094\\scratchpad\\vigil-fields"],
+      "port": 5180
+    },
+    {
+      "name": "uiux-explorer",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\Users\\Public\\uiux-pro-max-system-explorer", "run", "dev", "--", "--port", "5181", "--strictPort"],
+      "port": 5181
+    }
+  ]
+}
