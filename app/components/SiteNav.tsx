@@ -11,7 +11,7 @@ export function SiteNav() {
         <Link href="/plans">Plans</Link>
         <Link href="/how-we-verify">Verification</Link>
         <Link href="/providers/apply">For providers</Link>
-        <Link href="/account/login">Sign in</Link>
+        <Link href="/login">Sign in</Link>
       </div>
       <Link className="nav-cta nav-book" href="/request">Request protection</Link>
     </nav>
