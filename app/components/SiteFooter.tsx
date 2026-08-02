@@ -6,14 +6,14 @@ export function SiteFooter() {
     <footer className="shell site-footer">
       <div className="footer-top">
         <Link className="brand" href="/" aria-label="SafeMY home"><Image className="brand-logo" src="/brand/safemy-logo.png" alt="SafeMY" width={1811} height={868} /></Link>
-        <p>Early-access pilot connecting customers in the Klang Valley with licensed Malaysian security agencies.</p>
+        <p>Early-access booking, verification and assignment platform for customers and licensed Malaysian security agencies.</p>
       </div>
       <div className="footer-links">
         <div>
           <b>Platform</b>
           <Link href="/safety">Free safety toolkit</Link>
           <Link href="/plans">Plans &amp; pricing</Link>
-          <Link href="/request">Request protection</Link>
+          <Link href="/request">Request a quote</Link>
           <Link href="/pilot">Join the pilot</Link>
         </div>
         <div>
@@ -41,7 +41,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <small>© 2026 SafeMY · Company registration: to be added before public launch · Early-access pilot, Klang Valley only.</small>
+        <small>© 2026 SafeMY · Pre-launch pilot, Klang Valley only. SafeMY does not accept payments. Registered entity, payment entity, address and staffed support contacts must be published before a paid public launch.</small>
       </div>
     </footer>
   );

@@ -22,6 +22,16 @@ function loadGoogleMaps(apiKey: string) {
   return mapsPromise;
 }
 
+function makePin(library: google.maps.MarkerLibrary, label: string, background: string) {
+  return new library.PinElement({
+    background,
+    borderColor: "#ffffff",
+    glyphColor: "#ffffff",
+    glyphText: label,
+    scale: 1.15,
+  });
+}
+
 export function GoogleLiveMap({
   customer,
   personnel,
@@ -33,12 +43,14 @@ export function GoogleLiveMap({
 }) {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const customerMarkerRef = useRef<google.maps.Marker | null>(null);
-  const personnelMarkerRef = useRef<google.maps.Marker | null>(null);
+  const customerMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const personnelMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const routeRef = useRef<google.maps.Polyline | null>(null);
   const libraryRef = useRef<Awaited<ReturnType<typeof loadGoogleMaps>> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [mapMode, setMapMode] = useState<"roadmap" | "satellite">("roadmap");
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? "";
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID?.trim() || "DEMO_MAP_ID";
 
   useEffect(() => {
     if (!apiKey || !canvasRef.current) {
@@ -54,15 +66,13 @@ export function GoogleLiveMap({
       mapRef.current = new libraries.maps.Map(canvasRef.current, {
         center: initial,
         zoom: customer || personnel ? 16 : 11,
+        mapId,
+        mapTypeId: mapMode,
         disableDefaultUI: true,
         zoomControl: true,
         fullscreenControl: true,
         gestureHandling: "greedy",
         clickableIcons: false,
-        styles: [
-          { featureType: "poi", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", stylers: [{ visibility: "off" }] },
-        ],
       });
       setStatus("ready");
     }).catch(() => {
@@ -71,11 +81,17 @@ export function GoogleLiveMap({
 
     return () => {
       cancelled = true;
-      customerMarkerRef.current?.setMap(null);
-      personnelMarkerRef.current?.setMap(null);
+      if (customerMarkerRef.current) customerMarkerRef.current.map = null;
+      if (personnelMarkerRef.current) personnelMarkerRef.current.map = null;
       routeRef.current?.setMap(null);
     };
-  }, [apiKey]);
+  // Map configuration is fixed for the life of this assignment view.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKey, mapId]);
+
+  useEffect(() => {
+    mapRef.current?.setMapTypeId(mapMode);
+  }, [mapMode]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -84,48 +100,34 @@ export function GoogleLiveMap({
 
     if (customer) {
       if (!customerMarkerRef.current) {
-        customerMarkerRef.current = new libraries.marker.Marker({
+        const marker = new libraries.marker.AdvancedMarkerElement({
           map,
           title: "SafeMY customer",
-          label: { text: "YOU", color: "#ffffff", fontSize: "10px", fontWeight: "800" },
-          icon: {
-            path: libraries.core.SymbolPath.CIRCLE,
-            fillColor: "#073b38",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 4,
-            scale: 18,
-          },
           zIndex: 3,
         });
+        marker.append(makePin(libraries.marker, "YOU", "#073b38"));
+        customerMarkerRef.current = marker;
       }
-      customerMarkerRef.current.setPosition(customer);
-    } else {
-      customerMarkerRef.current?.setMap(null);
+      customerMarkerRef.current.position = customer;
+    } else if (customerMarkerRef.current) {
+      customerMarkerRef.current.map = null;
       customerMarkerRef.current = null;
     }
 
     if (personnel) {
       if (!personnelMarkerRef.current) {
-        personnelMarkerRef.current = new libraries.marker.Marker({
+        const marker = new libraries.marker.AdvancedMarkerElement({
           map,
           title: personnelName || "Assigned SafeMY personnel",
-          label: { text: "PRO", color: "#ffffff", fontSize: "10px", fontWeight: "800" },
-          icon: {
-            path: libraries.core.SymbolPath.CIRCLE,
-            fillColor: "#f15f4b",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 4,
-            scale: 18,
-          },
           zIndex: 2,
         });
+        marker.append(makePin(libraries.marker, "PRO", "#f15f4b"));
+        personnelMarkerRef.current = marker;
       }
-      personnelMarkerRef.current.setPosition(personnel);
-      personnelMarkerRef.current.setTitle(personnelName || "Assigned SafeMY personnel");
-    } else {
-      personnelMarkerRef.current?.setMap(null);
+      personnelMarkerRef.current.position = personnel;
+      personnelMarkerRef.current.title = personnelName || "Assigned SafeMY personnel";
+    } else if (personnelMarkerRef.current) {
+      personnelMarkerRef.current.map = null;
       personnelMarkerRef.current = null;
     }
 
@@ -156,13 +158,17 @@ export function GoogleLiveMap({
         map.setZoom(16);
       }
     }
-  }, [customer?.lat, customer?.lng, personnel?.lat, personnel?.lng, personnelName, status]);
+  }, [customer, personnel, personnelName, status]);
 
   return (
     <>
+      <div className="google-map-mode-switch" aria-label="Map view">
+        <button className={mapMode === "roadmap" ? "active" : ""} onClick={() => setMapMode("roadmap")}>Map</button>
+        <button className={mapMode === "satellite" ? "active" : ""} onClick={() => setMapMode("satellite")}>Satellite</button>
+      </div>
       <div ref={canvasRef} className="google-live-map" aria-label="Google Map showing the live customer and assigned personnel locations" />
-      {status === "loading" && <div className="google-map-state">Loading Google Maps...</div>}
-      {status === "error" && <div className="google-map-state error">Google Maps could not load. Use the directions button below.</div>}
+      {status === "loading" && <div className="google-map-state">Loading Google Maps…</div>}
+      {status === "error" && <div className="google-map-state error">Google Maps is not configured for this deployment. Use the route and area-view buttons below.</div>}
     </>
   );
 }

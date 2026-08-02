@@ -16,8 +16,8 @@ export default function RequestProtectionPage() {
       <SiteNav />
       <section className="form-hero shell">
         <span className="kicker">KLANG VALLEY PILOT · EARLY ACCESS</span>
-        <h1>Request protection.</h1>
-        <p>Tell us what you need. Our team manually reviews every request and works to match it with a licensed partner agency covering your area. This pilot does not yet guarantee coverage or response time.</p>
+        <h1>Request a protection quote.</h1>
+        <p>Tell us what you need. Our team manually reviews every request and works to match it with a licensed partner agency covering your area. Submitting this form is not a confirmed booking and does not guarantee coverage or response time.</p>
       </section>
 
       <section className="shell form-shell">
@@ -125,7 +125,7 @@ function RequestForm() {
         <label className="field wide"><span>Location</span><input name="location" required placeholder="e.g. KLCC, Kuala Lumpur" /></label>
         <label className="field"><span>Date</span><input name="startDate" type="date" required /></label>
         <label className="field"><span>Start time</span><input name="startTime" type="time" required /></label>
-        <label className="field"><span>Duration (hours)</span><input name="durationHours" type="number" min="1" required placeholder="6" /></label>
+        <label className="field"><span>Duration (hours)</span><input name="durationHours" type="number" min="5" required placeholder="5" /><small>Pilot request minimum: 5 hours. An agency may quote a longer minimum.</small></label>
         <label className="field"><span>Number of professionals</span><input name="professionalsCount" type="number" min="1" required placeholder="1" /></label>
         <label className="field"><span>Your gender</span>
           <select name="customerGender" required defaultValue="prefer_not_to_say">
@@ -148,9 +148,9 @@ function RequestForm() {
       </div>
       {status === "error" && <p className="form-error">{error}</p>}
       <button className="form-submit" type="submit" disabled={status === "submitting"}>
-        {status === "submitting" ? "Submitting…" : "Submit request →"}
+        {status === "submitting" ? "Submitting…" : "Submit quote request →"}
       </button>
-      <p className="form-note">Gender is a matching priority, not an exclusion: SafeMY checks your preference first, then the nearest available verified professional. Pricing remains subject to agency confirmation.</p>
+      <p className="form-note">Gender is a matching priority, not an exclusion: SafeMY checks your preference first, then the nearest available verified professional. Pricing, deposit, transport, surcharges and cancellation terms remain subject to the agency&apos;s written confirmation. SafeMY takes no payment during the pilot.</p>
     </form>
   );
 }

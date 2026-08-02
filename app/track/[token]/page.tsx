@@ -6,7 +6,7 @@ import { SiteNav } from "../../components/SiteNav";
 import { SiteFooter } from "../../components/SiteFooter";
 import { haversineKm } from "../../../db/matching";
 import { GoogleLiveMap } from "../../components/GoogleLiveMap";
-import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "../../../db/google-maps";
+import { googleEarthAreaUrl, googleMapsDirectionsUrl, googleMapsSearchUrl } from "../../../db/google-maps";
 
 interface TrackingLocation {
   actor_type: "customer" | "personnel";
@@ -92,13 +92,14 @@ export default function TrackingPage() {
       ? googleMapsSearchUrl(customer ?? personnel as TrackingLocation)
       : "https://www.google.com/maps/@?api=1&map_action=map&center=3.1390%2C101.6869&zoom=11";
   const googleMapsEnabled = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+  const areaPoint = customer ?? personnel;
   const isFresh = (location?: TrackingLocation) => location ? Date.now() - new Date(location.updated_at).getTime() < 15000 : false;
 
   return (
     <main>
       <SiteNav />
       <section className="tracking-hero shell">
-        <span className="kicker">PRIVATE ASSIGNMENT TRACKING</span>
+        <span className="kicker">SAFEMY LIVE ASSIGNMENT · PRIVATE</span>
         <h1>One job.<br />One synchronized view.</h1>
         <p>Customer and assigned personnel locations use the same server-backed job record, timestamp and status.</p>
       </section>
@@ -120,7 +121,7 @@ export default function TrackingPage() {
               <div className="shared-distance"><small>LIVE DISTANCE</small><b>{distance === null ? "—" : `${distance.toFixed(2)} km`}</b><span>{eta === null ? "Waiting for both locations" : `Approx. ${eta} min ETA`}</span></div>
             </div>
 
-            <div className="google-maps-actions"><div><b>Google Maps</b><span>{googleMapsEnabled ? "Embedded live map active" : "Live route opens securely in Google Maps"}</span></div><a className="google-maps-link primary" href={mapsUrl} target="_blank" rel="noreferrer">{customer && personnel ? "Open live route" : "Open live location"} ↗</a></div>
+            <div className="google-maps-actions"><div><b>Google Maps &amp; Earth</b><span>{googleMapsEnabled ? "Map and satellite views are available above" : "The live route opens securely in Google Maps"}. Earth is an optional area-planning view, not the live tracker.</span></div><div className="google-maps-action-buttons"><a className="google-maps-link primary" href={mapsUrl} target="_blank" rel="noreferrer">{customer && personnel ? "Open live route" : "Open live location"} ↗</a>{areaPoint && <a className="google-maps-link" href={googleEarthAreaUrl(areaPoint)} target="_blank" rel="noreferrer">Open 3D area ↗</a>}</div></div>
 
             <div className="shared-sync-grid">
               <LocationStatus label="Customer" location={customer} fresh={isFresh(customer)} />

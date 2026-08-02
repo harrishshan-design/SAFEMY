@@ -24,6 +24,10 @@ export default function HowWeVerifyPage() {
       <section className="shell doc-page">
         <p className="form-note">As we build out the Klang Valley pilot, no agency is shown as verified on SafeMY until it has completed every check below. If you don&apos;t see a specific number of verified partners elsewhere on this site, that&apos;s because we haven&apos;t published one — we&apos;ll only claim coverage we can back up.</p>
 
+        <h2>Public partner register</h2>
+        <div className="honesty-note"><b>No approved agency profile has been published publicly yet.</b><br />Every public profile must show the registered agency name, SSM number, KDN licence number, coverage, services, last SafeMY verification date and a link to the official government check. A generic “verified” badge is not enough.</div>
+        <p><a href="https://esims.moha.gov.my/semakan/main/search" target="_blank" rel="noreferrer">Open the official KDN eSIMS public licence search ↗</a></p>
+
         <div className="verify-grid">
           {checks.map((c) => (
             <div key={c.title} className="verify-card">

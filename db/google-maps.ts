@@ -25,3 +25,7 @@ export function googleMapsDirectionsUrl(origin: GoogleMapsPoint, destination: Go
   });
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
+
+export function googleEarthAreaUrl(point: GoogleMapsPoint) {
+  return `https://earth.google.com/web/search/${encodeURIComponent(coordinate(point))}`;
+}

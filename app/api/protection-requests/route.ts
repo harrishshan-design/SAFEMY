@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       !location && "location",
       !startDate && "startDate",
       !startTime && "startTime",
-      !(durationHours > 0) && "durationHours",
+      !(durationHours >= 5) && "durationHours (minimum 5)",
       !(professionalsCount > 0) && "professionalsCount",
       !VALID_GENDERS.includes(customerGender) && "customerGender",
       !VALID_GENDER_PREFERENCES.includes(personnelGenderPreference) && "personnelGenderPreference",
