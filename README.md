@@ -1,4 +1,4 @@
-# vinext-starter
+# SafeMY
 
 A clean full-stack starter running on
 [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
@@ -7,6 +7,23 @@ Drizzle support.
 ## Prerequisites
 
 - Node.js `>=22.13.0`
+
+## First-release deployment checklist
+
+The production app uses the linked Supabase project for booking, matching,
+reviews, support cases and tracking telemetry. After cloning, authenticate the
+Supabase CLI and apply the checked-in migrations before testing those flows:
+
+```bash
+npx supabase login
+npx supabase link --project-ref gbxgqmsnuczblclrplyw
+npx supabase db push
+```
+
+For the interactive Google Maps layer, add a browser-restricted
+`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` and `NEXT_PUBLIC_GOOGLE_MAP_ID` in Vercel.
+The tracking page still provides Google Maps links and a no-key embed fallback
+until those variables are configured.
 
 ## Quick Start
 
