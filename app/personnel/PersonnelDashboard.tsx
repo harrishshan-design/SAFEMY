@@ -87,7 +87,7 @@ export function PersonnelDashboard({ personnelId, fullName }: { personnelId: num
                   {history.map((r) => (
                     <tr key={r.id}>
                       <td>{r.reference}</td><td>{r.service_type}</td><td>{r.location}</td>
-                      <td>{r.start_date} {r.start_time}</td>
+                      <td>{r.start_date} {r.start_time}<PersonnelReviewForm requestId={r.id} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -98,6 +98,19 @@ export function PersonnelDashboard({ personnelId, fullName }: { personnelId: num
       )}
     </main>
   );
+}
+
+function PersonnelReviewForm({ requestId }: { requestId: number }) {
+  const [rating, setRating] = useState("5");
+  const [comment, setComment] = useState("");
+  const [done, setDone] = useState(false);
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const response = await fetch(`/api/personnel/requests/${requestId}/review`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rating: Number(rating), comment }) });
+    if (response.ok) setDone(true);
+  }
+  if (done) return <small className="form-success" style={{ display: "inline-block", marginTop: 6 }}>Review saved</small>;
+  return <form onSubmit={submit} style={{ display: "flex", gap: 5, marginTop: 6 }}><select value={rating} onChange={(event) => setRating(event.target.value)} aria-label="Customer rating"><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select><input value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Rate customer (optional)" maxLength={300} /><button className="tool-btn ghost" style={{ padding: "5px 8px", fontSize: "9px" }}>Submit</button></form>;
 }
 
 const MIN_UPDATE_INTERVAL_MS = 4_000;
@@ -135,7 +148,7 @@ function LocationShareButton({ requestId, trackingEnabled }: { requestId: number
           const res = await fetch(`/api/personnel/requests/${requestId}/location`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+            body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, heading: pos.coords.heading, speed: pos.coords.speed }),
           });
           if (res.ok) {
             setLastSentAt(new Date());

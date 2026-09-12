@@ -11,16 +11,37 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const payload = (await request.json()) as Record<string, unknown>;
   const action = String(payload.action ?? "");
-  if (action !== "accept" && action !== "decline") {
+  if (action !== "accept" && action !== "decline" && action !== "issue_quote") {
     return Response.json({ error: "Invalid action" }, { status: 400 });
   }
   const { data: currentJob, error: jobError } = await supabase
     .from("safemy_protection_requests")
-    .select("id, reference, email, service_type, customer_gender, personnel_gender_preference, pickup_lat, pickup_lng")
+    .select("id, reference, email, service_type, customer_gender, personnel_gender_preference, pickup_lat, pickup_lng, duration_hours, professionals_count")
     .eq("id", id)
     .eq("assigned_agency_id", agency.id)
     .single();
   if (jobError || !currentJob) return Response.json({ error: jobError?.message ?? "Request not found" }, { status: 404 });
+
+  if (action === "issue_quote") {
+    const amount = Number(payload.amount ?? 0);
+    const breakdown = Array.isArray(payload.breakdown)
+      ? payload.breakdown.map((item) => String(item).trim()).filter(Boolean).slice(0, 12)
+      : [];
+    if (!Number.isFinite(amount) || amount < 0 || breakdown.length === 0) return Response.json({ error: "Add a valid quote amount and at least one breakdown line." }, { status: 400 });
+    const expiresAt = String(payload.expiresAt ?? "").trim() || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase.from("safemy_protection_requests").update({
+      quote_status: "issued", quote_currency: "MYR", quote_amount: amount,
+      quote_breakdown: breakdown, quote_issued_at: new Date().toISOString(), quote_expires_at: expiresAt,
+    }).eq("id", id).eq("assigned_agency_id", agency.id).select("reference, email, service_type").single();
+    if (error || !data) return Response.json({ error: error?.message ?? "Could not issue quote" }, { status: 400 });
+    await supabase.from("safemy_booking_events").insert({
+      request_id: Number(id), actor_type: "agency", actor_id: (await supabase.auth.getUser()).data.user?.id ?? null,
+      event_type: "quote_issued", label: `Quote issued: MYR ${amount.toFixed(2)}`,
+      metadata: { amount, currency: "MYR", breakdown, expires_at: expiresAt },
+    });
+    await notify({ to: data.email, subject: `Your SafeMY quote is ready: ${data.reference}`, body: `${agency.agency_name} issued a MYR ${amount.toFixed(2)} quote for ${data.service_type} (${data.reference}). Review the transparent breakdown in your private tracking link.`, category: "request_status_changed", relatedTable: "safemy_protection_requests", relatedId: id });
+    return Response.json({ ok: true, quoteAmount: amount });
+  }
 
   let matchedPersonnel: { id: number; full_name: string; distance_km: number | null; gender_priority: boolean } | null = null;
   if (action === "accept") {
@@ -57,8 +78,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         tracking_enabled: true,
         tracking_started_at: now,
         tracking_ended_at: null,
+        accepted_at: now,
+        assigned_at: now,
       }
-    : { status: "declined", tracking_enabled: false, tracking_ended_at: now };
+    : { status: "declined", tracking_enabled: false, tracking_ended_at: now, declined_at: now };
 
   // RLS also enforces that an agency can update only requests assigned to it.
   const { data, error } = await supabase
@@ -70,6 +93,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .single();
 
   if (error || !data) return Response.json({ error: error?.message ?? "Update failed" }, { status: 400 });
+
+  await supabase.from("safemy_booking_events").insert({
+    request_id: Number(id), actor_type: "agency", actor_id: (await supabase.auth.getUser()).data.user?.id ?? null,
+    event_type: action === "accept" ? "accepted" : "declined",
+    label: action === "accept" ? `Accepted by ${agency.agency_name}` : `Declined by ${agency.agency_name}`,
+    metadata: matchedPersonnel ? { personnel_id: matchedPersonnel.id, personnel_name: matchedPersonnel.full_name } : {},
+  });
 
   await notify({
     to: data.email,

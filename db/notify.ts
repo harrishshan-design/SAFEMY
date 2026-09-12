@@ -17,7 +17,8 @@ export type EmailCategory =
   | "request_status_changed"
   | "provider_status_changed"
   | "agency_assigned"
-  | "personnel_invited";
+  | "personnel_invited"
+  | "support_case_created";
 
 interface SendEmailInput {
   to: string;

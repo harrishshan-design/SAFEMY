@@ -19,6 +19,7 @@ export function SiteFooter() {
         <div>
           <b>For organisations</b>
           <Link href="/partners">Partner with SafeMY</Link>
+          <Link href="/support">Support &amp; disputes</Link>
           <Link href="/providers/apply">Register as a provider</Link>
           <Link href="/business">SafeMY for Business</Link>
         </div>

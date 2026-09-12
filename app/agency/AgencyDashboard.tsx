@@ -23,6 +23,11 @@ interface AssignedRequest {
   notes: string;
   status: string;
   created_at: string;
+  quote_status: string;
+  quote_currency: string;
+  quote_amount: number | null;
+  quote_breakdown: string[];
+  quote_expires_at: string | null;
 }
 
 interface Personnel {
@@ -84,6 +89,17 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
     load();
   }
 
+  async function issueQuote(id: number, amount: number, breakdown: string[]) {
+    setBusyId(id);
+    setError("");
+    const response = await fetch(`/api/agency/requests/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "issue_quote", amount, breakdown }) });
+    const data = await response.json() as { error?: string };
+    if (!response.ok) setError(data.error ?? "Unable to issue this quote.");
+    else setNotice("Transparent quote sent to the customer.");
+    setBusyId(null);
+    load();
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     router.push("/agency/login");
@@ -125,6 +141,7 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
                     <p className="matching-priority"><b>Matching priority:</b> {formatGenderPreference(r.personnel_gender_preference, r.customer_gender)} · nearest verified available personnel next</p>
                     {r.notes && <p className="form-note">{r.notes}</p>}
                   </div>
+                  <QuoteEditor busy={busyId === r.id} onIssue={(amount, breakdown) => issueQuote(r.id, amount, breakdown)} existingAmount={r.quote_amount} existingBreakdown={r.quote_breakdown} />
                   <div className="admin-request-actions">
                     <button className="tool-btn primary" disabled={busyId === r.id} onClick={() => respond(r.id, "accept")}>Accept</button>
                     <button className="tool-btn ghost" disabled={busyId === r.id} onClick={() => respond(r.id, "decline")}>Decline</button>
@@ -175,6 +192,12 @@ export function AgencyDashboard({ agencyId, agencyName }: { agencyId: number; ag
       )}
     </main>
   );
+}
+
+function QuoteEditor({ busy, onIssue, existingAmount, existingBreakdown }: { busy: boolean; onIssue: (amount: number, breakdown: string[]) => void; existingAmount: number | null; existingBreakdown: string[] }) {
+  const [amount, setAmount] = useState(existingAmount ? String(existingAmount) : "");
+  const [breakdown, setBreakdown] = useState(existingBreakdown?.join("\n") || "Personnel\nTravel\nPlatform / coordination");
+  return <div className="quote-editor"><div><b>Transparent quote</b><small>Customer sees each line before confirming. No payment is collected in this pilot.</small></div><div className="quote-editor-fields"><label>MYR total<input type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="600.00" /></label><label>Breakdown (one line each)<textarea rows={2} value={breakdown} onChange={(event) => setBreakdown(event.target.value)} /></label><button className="tool-btn ghost" type="button" disabled={busy} onClick={() => onIssue(Number(amount), breakdown.split("\n").map((line) => line.trim()).filter(Boolean))}>{busy ? "Sending…" : "Issue / update quote"}</button></div></div>;
 }
 
 function formatGenderPreference(preference: string, customerGender: string) {

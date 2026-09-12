@@ -17,7 +17,8 @@ export type SubmissionTable =
   | "safemy_pilot_signups"
   | "safemy_provider_applications"
   | "safemy_business_enquiries"
-  | "safemy_partner_enquiries";
+  | "safemy_partner_enquiries"
+  | "safemy_support_cases";
 
 function makeReference(): string {
   return "SM-" + crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();

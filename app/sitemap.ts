@@ -16,6 +16,7 @@ const publicRoutes = [
   "/providers/apply",
   "/request",
   "/safety",
+  "/support",
   "/terms",
 ];
 

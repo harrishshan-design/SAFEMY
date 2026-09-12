@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SiteNav } from "../components/SiteNav";
 import { SiteFooter } from "../components/SiteFooter";
+import { VerifiedProviderRegister } from "./VerifiedProviderRegister";
 
 const partnerTypes = [
   {
@@ -102,6 +103,10 @@ export default function PartnersPage() {
         <h2>What we need from you</h2>
         <p>Roughly how many people you&apos;d want covered, what you&apos;re hoping to fund (the free toolkit, affordable services, or both), and a contact we can talk to. No commitment is created by sending this form.</p>
         <p className="form-note">Any protection service described above is delivered by agencies licensed under Malaysia&apos;s Private Agencies Act 1971, never by independent individuals. SafeMY does not replace police, ambulance, fire or other government emergency services — in immediate danger, call 999.</p>
+      </section>
+
+      <section className="shell" style={{ maxWidth: 980 }}>
+        <VerifiedProviderRegister />
       </section>
 
       <section className="shell form-shell">

@@ -51,6 +51,7 @@ export function GoogleLiveMap({
   const [mapMode, setMapMode] = useState<"roadmap" | "satellite">("roadmap");
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? "";
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID?.trim() || "DEMO_MAP_ID";
+  const fallbackPoint = customer ?? personnel ?? { lat: 3.139, lng: 101.6869 };
 
   useEffect(() => {
     if (!apiKey || !canvasRef.current) {
@@ -166,7 +167,7 @@ export function GoogleLiveMap({
         <button className={mapMode === "roadmap" ? "active" : ""} onClick={() => setMapMode("roadmap")}>Map</button>
         <button className={mapMode === "satellite" ? "active" : ""} onClick={() => setMapMode("satellite")}>Satellite</button>
       </div>
-      <div ref={canvasRef} className="google-live-map" aria-label="Google Map showing the live customer and assigned personnel locations" />
+      {status === "error" ? <iframe className="google-map-embed" title="Google Map area view" loading="lazy" src={`https://www.google.com/maps?q=${fallbackPoint.lat},${fallbackPoint.lng}&z=15&output=embed`} /> : <div ref={canvasRef} className="google-live-map" aria-label="Google Map showing the live customer and assigned personnel locations" />}
       {status === "loading" && <div className="google-map-state">Loading Google Maps…</div>}
       {status === "error" && <div className="google-map-state error">Google Maps is not configured for this deployment. Use the route and area-view buttons below.</div>}
     </>

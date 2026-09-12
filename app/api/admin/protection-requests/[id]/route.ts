@@ -17,16 +17,25 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ error: "Invalid status" }, { status: 400 });
     }
     const trackingEnded = ["completed", "declined", "cancelled"].includes(status);
+    const now = new Date().toISOString();
+    const milestone = status === "completed" ? { completed_at: now } : status === "declined" ? { declined_at: now } : status === "cancelled" ? { cancelled_at: now } : status === "accepted" ? { accepted_at: now } : status === "assigned" ? { assigned_at: now } : status === "pending_review" ? { reviewed_at: now } : {};
     const { data, error } = await supabase
       .from("safemy_protection_requests")
       .update({
         status,
+        ...milestone,
         ...(trackingEnded ? { tracking_enabled: false, tracking_ended_at: new Date().toISOString() } : {}),
       })
       .eq("id", id)
       .select("reference, email, service_type")
       .single();
     if (error || !data) return Response.json({ error: error?.message ?? "Update failed" }, { status: 400 });
+
+    await supabase.from("safemy_booking_events").insert({
+      request_id: Number(id), actor_type: "admin", actor_id: (await supabase.auth.getUser()).data.user?.id ?? null,
+      event_type: "status_changed", label: `Status changed to ${status.replace("_", " ")}`,
+      metadata: { status },
+    });
 
     await notify({
       to: data.email,
@@ -58,6 +67,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .select("reference, service_type, location, start_date, start_time")
       .single();
     if (error || !data) return Response.json({ error: error?.message ?? "Assignment failed" }, { status: 400 });
+
+    await supabase.from("safemy_booking_events").insert({
+      request_id: Number(id), actor_type: "admin", actor_id: (await supabase.auth.getUser()).data.user?.id ?? null,
+      event_type: "agency_assigned", label: `Assigned to ${agencyName}`,
+      metadata: { agency_id: agencyId, agency_name: agencyName },
+    });
 
     if (agency?.contact_email) {
       await notify({

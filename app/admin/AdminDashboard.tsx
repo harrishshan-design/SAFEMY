@@ -290,6 +290,7 @@ function formatGenderPreference(preference: string, customerGender: string) {
 
 function ProvidersTab({ providers, onChange }: { providers: ProviderApplication[] | null; onChange: () => void }) {
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [publishError, setPublishError] = useState("");
 
   async function setStatus(id: number, status: string) {
     setBusyId(id);
@@ -302,13 +303,26 @@ function ProvidersTab({ providers, onChange }: { providers: ProviderApplication[
     onChange();
   }
 
+  async function publishProfile(id: number) {
+    setBusyId(id);
+    setPublishError("");
+    const response = await fetch(`/api/admin/provider-applications/${id}/public-profile`, { method: "POST" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({})) as { error?: string };
+      setPublishError(data.error ?? "Could not publish the public profile.");
+    }
+    setBusyId(null);
+    onChange();
+  }
+
   if (!providers) return <p className="form-note">Loading…</p>;
   if (providers.length === 0) return <p className="tool-empty">No provider applications yet.</p>;
 
   return (
     <div className="admin-table-wrap">
+      {publishError && <p className="form-error">{publishError}</p>}
       <table className="admin-table">
-        <thead><tr><th>Reference</th><th>Agency</th><th>SSM / KDN</th><th>Contact</th><th>Services</th><th>Coverage</th><th>Login</th><th>Status</th></tr></thead>
+        <thead><tr><th>Reference</th><th>Agency</th><th>SSM / KDN</th><th>Contact</th><th>Services</th><th>Coverage</th><th>Login</th><th>Status</th><th>Public proof</th></tr></thead>
         <tbody>
           {providers.map((p) => (
             <tr key={p.id}>
@@ -324,6 +338,7 @@ function ProvidersTab({ providers, onChange }: { providers: ProviderApplication[
                   {APPLICATION_STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
                 </select>
               </td>
+              <td><button className="tool-btn ghost" disabled={busyId === p.id || p.status !== "approved"} onClick={() => publishProfile(p.id)}>{busyId === p.id ? "Publishing…" : "Publish register profile"}</button></td>
             </tr>
           ))}
         </tbody>
