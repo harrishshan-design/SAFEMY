@@ -8,7 +8,13 @@ import { SiteFooter } from "../components/SiteFooter";
 import { EmergencyBanner } from "../components/EmergencyBanner";
 import { googleMapsSearchUrl } from "../../db/google-maps";
 
-const serviceOptions = ["Personal Bodyguard", "Security Driver", "Event Security", "Female Protection", "Other"];
+const serviceOptions = [
+  { value: "Personal Bodyguard", label: "Personal bodyguard" },
+  { value: "Security Driver", label: "Protective driver — customer’s vehicle (pilot)" },
+  { value: "Event Security", label: "Event security" },
+  { value: "Female Protection", label: "Female protection personnel" },
+  { value: "Other", label: "Other planned security need" },
+];
 
 export default function RequestProtectionPage() {
   return (
@@ -117,9 +123,9 @@ function RequestForm() {
         <label className="field"><span>Phone</span><input name="phone" type="tel" required placeholder="e.g. 012-345 6789" /></label>
         <label className="field"><span>Email</span><input name="email" type="email" required placeholder="you@example.com" /></label>
         <label className="field"><span>Service type</span>
-          <select name="serviceType" required defaultValue={serviceOptions.includes(preselectedService) ? preselectedService : ""}>
+          <select name="serviceType" required defaultValue={serviceOptions.some((option) => option.value === preselectedService) ? preselectedService : ""}>
             <option value="" disabled>Select a service</option>
-            {serviceOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+            {serviceOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </label>
         <label className="field wide"><span>Location</span><input name="location" required placeholder="e.g. KLCC, Kuala Lumpur" /></label>
@@ -150,7 +156,7 @@ function RequestForm() {
       <button className="form-submit" type="submit" disabled={status === "submitting"}>
         {status === "submitting" ? "Submitting…" : "Submit quote request →"}
       </button>
-      <p className="form-note">Gender is a matching priority, not an exclusion: SafeMY checks your preference first, then the nearest available verified professional. Pricing, deposit, transport, surcharges and cancellation terms remain subject to the agency&apos;s written confirmation. SafeMY takes no payment during the pilot.</p>
+      <p className="form-note">Gender is a matching priority, not an exclusion: SafeMY checks your preference first, then the nearest available verified professional. Protective-driver requests use the customer&apos;s vehicle during the pilot and are not e-hailing bookings. Pricing, deposit, transport, surcharges and cancellation terms remain subject to the agency&apos;s written confirmation. SafeMY takes no payment during the pilot.</p>
     </form>
   );
 }

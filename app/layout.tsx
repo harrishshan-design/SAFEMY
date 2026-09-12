@@ -7,8 +7,8 @@ const newsreader = Newsreader({ variable: "--font-display", subsets: ["latin"] }
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://safemy.org"),
-  title: "SafeMY — Request Verified Protection in Malaysia",
-  description: "Request a protection quote, follow an accepted assignment and use free safety tools through SafeMY's Klang Valley pilot.",
+  title: "SafeMY — Safe Journey & Verified Protection in Malaysia",
+  description: "Start a free location-aware Safe Journey or request planned protection from a verified Malaysian security agency through SafeMY's Klang Valley pilot.",
   applicationName: "SafeMY",
   alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",
@@ -21,14 +21,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://safemy.org",
     siteName: "SafeMY",
-    title: "SafeMY — Request Verified Protection in Malaysia",
-    description: "Protection quote requests, accepted-assignment tracking and free safety tools for the Klang Valley.",
+    title: "SafeMY — Safe Journey & Verified Protection in Malaysia",
+    description: "Free journey check-ins with Google Maps plus planned protection requests for the Klang Valley.",
     images: [{ url: "/brand/safemy-logo.png", width: 1811, height: 868, alt: "SafeMY personal safety platform logo" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SafeMY — Request Verified Protection in Malaysia",
-    description: "Protection quote requests, accepted-assignment tracking and free safety tools for the Klang Valley.",
+    title: "SafeMY — Safe Journey & Verified Protection in Malaysia",
+    description: "Free journey check-ins with Google Maps plus planned protection requests for the Klang Valley.",
     images: ["/brand/safemy-logo.png"],
   },
 };

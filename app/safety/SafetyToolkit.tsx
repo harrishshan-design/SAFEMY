@@ -1,13 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { googleMapsSearchUrl } from "../../db/google-maps";
 
 type Guardian = { id: string; name: string; phone: string };
+type LocationSnapshot = {
+  lat: number;
+  lng: number;
+  accuracy: number;
+  capturedAt: number;
+};
 
 const STORAGE_KEY = "safemy.guardians.v1";
+const STORAGE_EVENT = "safemy-guardians-changed";
+const EMPTY_GUARDIANS: Guardian[] = [];
+let cachedRaw: string | null | undefined;
+let cachedGuardians: Guardian[] = EMPTY_GUARDIANS;
 
-// Guardians live only in this browser. Nothing is uploaded — there is no
-// account, and the API routes never receive this data.
 function loadGuardians(): Guardian[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -26,13 +35,49 @@ function loadGuardians(): Guardian[] {
   }
 }
 
+function guardianSnapshot() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === cachedRaw) return cachedGuardians;
+    cachedRaw = raw;
+    cachedGuardians = loadGuardians();
+    return cachedGuardians;
+  } catch {
+    return cachedGuardians;
+  }
+}
+
+function subscribeToGuardians(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(STORAGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(STORAGE_EVENT, onStoreChange);
+  };
+}
+
+function subscribeToHydration() {
+  return () => undefined;
+}
+
 function telHref(phone: string) {
   return `tel:${phone.replace(/[^\d+]/g, "")}`;
 }
 
 function smsHref(phone: string, body: string) {
-  // `?body=` is the widely supported form; iOS also accepts `&body=`.
   return `sms:${phone.replace(/[^\d+]/g, "")}?body=${encodeURIComponent(body)}`;
+}
+
+function whatsappHref(phone: string, body: string) {
+  const digits = phone.replace(/\D/g, "");
+  const malaysiaNumber = digits.startsWith("0") ? `60${digits.slice(1)}` : digits;
+  return `https://wa.me/${malaysiaNumber}?text=${encodeURIComponent(body)}`;
+}
+
+function directionsHref(location: LocationSnapshot | null, destination: string) {
+  const params = new URLSearchParams({ api: "1", destination, travelmode: "walking" });
+  if (location) params.set("origin", `${location.lat.toFixed(6)},${location.lng.toFixed(6)}`);
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 function formatClock(totalSeconds: number) {
@@ -42,24 +87,20 @@ function formatClock(totalSeconds: number) {
 }
 
 export function SafetyToolkit() {
-  const [guardians, setGuardians] = useState<Guardian[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const guardians = useSyncExternalStore(subscribeToGuardians, guardianSnapshot, () => EMPTY_GUARDIANS);
+  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
-  useEffect(() => {
-    setGuardians(loadGuardians());
-    setHydrated(true);
-  }, []);
-
-  const persist = useCallback((next: Guardian[]) => {
-    setGuardians(next);
+  function persist(next: Guardian[]) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      cachedRaw = undefined;
+      window.dispatchEvent(new Event(STORAGE_EVENT));
     } catch {
-      /* storage unavailable (private mode) — the list still works this session */
+      /* storage is unavailable in this browser session */
     }
-  }, []);
+  }
 
   function addGuardian(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -87,7 +128,7 @@ export function SafetyToolkit() {
         onAdd={addGuardian}
         onRemove={removeGuardian}
       />
-      <CheckInCard guardians={guardians} />
+      <JourneyCard guardians={guardians} />
     </>
   );
 }
@@ -109,13 +150,13 @@ function GuardiansCard({
       <div className="tool-head">
         <span className="tool-num">01</span>
         <div>
-          <h2>Your guardians</h2>
-          <p>The people you&apos;d want contacted if something felt wrong. Saved only in this browser, on this device — SafeMY never receives them, and there&apos;s no account for them to live on.</p>
+          <h2>Choose a trusted person</h2>
+          <p>Add someone you can contact before a journey. Their details stay on this device and are never uploaded to SafeMY.</p>
         </div>
       </div>
 
       <div className="honesty-note">
-        This list stays on your phone or computer only. Nothing is uploaded to SafeMY and there is no server copy — if you clear your browser data or switch devices, you&apos;ll need to add your guardians again.
+        Your trusted-person list is saved only in this browser. Clearing browser data or changing devices removes it.
       </div>
 
       <form className="guardian-form" onSubmit={onAdd}>
@@ -124,14 +165,14 @@ function GuardiansCard({
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mak" required />
         </label>
         <label className="field">
-          <span>Phone</span>
+          <span>Malaysian mobile number</span>
           <input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="e.g. 012-345 6789" required />
         </label>
-        <button type="submit" className="tool-btn primary">Add guardian</button>
+        <button type="submit" className="tool-btn primary">Save person</button>
       </form>
 
       {!hydrated ? null : guardians.length === 0 ? (
-        <p className="tool-empty">No guardians saved yet. Add one above — most people start with a parent, partner, housemate, or close friend.</p>
+        <p className="tool-empty">No trusted person saved yet. Add a parent, partner, housemate, or close friend to unlock one-tap journey messages.</p>
       ) : (
         <ul className="guardian-list">
           {guardians.map((g) => (
@@ -142,15 +183,8 @@ function GuardiansCard({
               </div>
               <div className="guardian-actions">
                 <a className="tool-btn" href={telHref(g.phone)}>Call</a>
-                <a
-                  className="tool-btn"
-                  href={smsHref(g.phone, `Hi ${g.name}, I'm using SafeMY to let you know where I am. I'll message again when I get in.`)}
-                >
-                  Message
-                </a>
-                <button className="tool-btn ghost" onClick={() => onRemove(g.id)} aria-label={`Remove ${g.name}`}>
-                  Remove
-                </button>
+                <a className="tool-btn" href={whatsappHref(g.phone, `Hi ${g.name}, I saved you as a trusted person in my SafeMY safety toolkit.`)} target="_blank" rel="noreferrer">WhatsApp</a>
+                <button className="tool-btn ghost" onClick={() => onRemove(g.id)} aria-label={`Remove ${g.name}`}>Remove</button>
               </div>
             </li>
           ))}
@@ -160,13 +194,17 @@ function GuardiansCard({
   );
 }
 
-function CheckInCard({ guardians }: { guardians: Guardian[] }) {
+function JourneyCard({ guardians }: { guardians: Guardian[] }) {
   const [minutes, setMinutes] = useState(25);
   const [destination, setDestination] = useState("");
+  const [guardianId, setGuardianId] = useState("");
   const [deadline, setDeadline] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [overdue, setOverdue] = useState(false);
-  const [startedAt, setStartedAt] = useState<string>("");
+  const [startedAt, setStartedAt] = useState("");
+  const [location, setLocation] = useState<LocationSnapshot | null>(null);
+  const [locationStatus, setLocationStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [shareStatus, setShareStatus] = useState("");
   const intervalRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -181,93 +219,167 @@ function CheckInCard({ guardians }: { guardians: Guardian[] }) {
     return () => window.clearInterval(intervalRef.current);
   }, [deadline]);
 
-  // Keep the tab title in sync so an overdue check-in is visible from another tab.
   useEffect(() => {
     const original = document.title;
     if (deadline !== null) {
-      document.title = overdue ? "⚠ Check-in overdue — SafeMY" : `${formatClock(remaining)} — SafeMY check-in`;
+      document.title = overdue ? "⚠ Journey check-in overdue — SafeMY" : `${formatClock(remaining)} — SafeMY Safe Journey`;
     }
     return () => {
       document.title = original;
     };
   }, [deadline, overdue, remaining]);
 
+  const selectedGuardian = guardians.find((g) => g.id === guardianId) ?? guardians[0];
+  const where = destination.trim();
+  const expectedAt = deadline === null ? "" : new Date(deadline).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const mapUrl = location ? googleMapsSearchUrl(location) : "";
+  const locationSentence = mapUrl ? ` My latest location is ${mapUrl}.` : "";
+  const journeyMessage = `I started a SafeMY Safe Journey at ${startedAt}${where ? ` to ${where}` : ""}. I expect to arrive by ${expectedAt}.${locationSentence} Please check on me if I do not confirm.`;
+  const alertMessage = `My SafeMY journey check-in is overdue${where ? ` while heading to ${where}` : ""}.${locationSentence} Please try to reach me. If you believe I am in danger, call 999.`;
+  const safeMessage = `I have arrived safely${where ? ` at ${where}` : ""}. My SafeMY journey is complete.`;
+
+  function captureLocation() {
+    if (!navigator.geolocation) {
+      setLocationStatus("error");
+      return;
+    }
+    setLocationStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: Math.round(position.coords.accuracy),
+          capturedAt: Date.now(),
+        });
+        setLocationStatus("ready");
+      },
+      () => setLocationStatus("error"),
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 12_000 },
+    );
+  }
+
   function start() {
     const now = new Date();
     setStartedAt(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
     setOverdue(false);
-    setDeadline(Date.now() + minutes * 60_000);
+    setShareStatus("");
+    setDeadline(now.getTime() + minutes * 60_000);
   }
 
-  function cancel() {
+  function end() {
     setDeadline(null);
     setOverdue(false);
+    setShareStatus("");
   }
 
-  const where = destination.trim();
-  const alertMessage =
-    `I set a SafeMY check-in for ${minutes} minutes at ${startedAt}${where ? ` on my way to ${where}` : ""} and I haven't checked in. ` +
-    `Please try to reach me. If you can't, call 999.`;
+  async function shareJourney(text: string) {
+    setShareStatus("");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "SafeMY Safe Journey", text });
+        setShareStatus("Share sheet opened.");
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      setShareStatus("Journey message copied.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setShareStatus("Use WhatsApp or SMS below to share.");
+    }
+  }
 
   return (
-    <section className="tool-card" id="check-in">
+    <section className="tool-card journey-card" id="check-in">
       <div className="tool-head">
         <span className="tool-num">02</span>
         <div>
-          <h2>Safety check-in</h2>
-          <p>Set a timer before you set off. If you don&apos;t check in by the time it ends, this page prompts you to alert a guardian.</p>
+          <h2>Start a Safe Journey</h2>
+          <p>Set where you are going, add a time to arrive, capture your location, and tell one trusted person.</p>
         </div>
       </div>
 
       <div className="honesty-note">
-        Be clear-eyed about what this does: it only works while this tab stays open on your phone or computer, and it cannot call, message, or alert anyone by itself. All it does is prompt you, when time&apos;s up, to send an alert yourself. If you&apos;re in danger, don&apos;t wait for a timer — call 999.
+        Phase 1 is user-controlled: SafeMY does not monitor this journey, contact your trusted person, or call 999 automatically. The timer works only while this tab stays open. Your coordinates stay in this browser unless you choose to share them; Google receives them when its map or link loads.
       </div>
 
       {deadline === null ? (
-        <div className="checkin-setup">
-          <label className="field">
-            <span>I should arrive in</span>
-            <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-              {[5, 10, 15, 20, 25, 30, 45, 60, 90].map((m) => (
-                <option key={m} value={m}>{m} minutes</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Heading to (optional)</span>
-            <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="e.g. home from campus, back from the LRT station" />
-          </label>
-          <button className="tool-btn primary" onClick={start}>Start check-in</button>
-        </div>
-      ) : overdue ? (
-        <div className="checkin-live overdue">
-          <div className="checkin-clock">Check-in overdue</div>
-          <p>You set a {minutes}-minute check-in at {startedAt}{where ? ` on your way to ${where}` : ""}. Are you safe?</p>
-          <p className="honesty-note">Tapping &quot;Alert&quot; opens a pre-written text message to that guardian — it doesn&apos;t send by itself. You still need to press send.</p>
-          <div className="checkin-actions">
-            <button className="tool-btn primary" onClick={cancel}>I&apos;m safe — end check-in</button>
-            {guardians.length === 0 ? (
-              <a className="tool-btn" href="#guardians">Add a guardian to alert</a>
-            ) : (
-              guardians.map((g) => (
-                <a key={g.id} className="tool-btn alert" href={smsHref(g.phone, alertMessage)}>
-                  Alert {g.name}
-                </a>
-              ))
-            )}
-            <a className="tool-btn emergency" href="tel:999">Call 999</a>
+        <div className="journey-setup">
+          <div className="checkin-setup">
+            <label className="field">
+              <span>I should arrive in</span>
+              <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
+                {[5, 10, 15, 20, 25, 30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{m} minutes</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Heading to</span>
+              <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="e.g. home from Bukit Bintang" />
+            </label>
+            <label className="field">
+              <span>Trusted person</span>
+              <select value={selectedGuardian?.id ?? ""} onChange={(e) => setGuardianId(e.target.value)} disabled={guardians.length === 0}>
+                {guardians.length === 0 ? <option value="">Add a person above</option> : guardians.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            </label>
           </div>
+
+          <div className="journey-location-row">
+            <div>
+              <b>{location ? "Location ready" : "Add your starting location"}</b>
+              <span>{location ? `Accurate to about ${location.accuracy} m · captured ${new Date(location.capturedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Optional, but it gives your trusted person a useful Google Maps pin."}</span>
+            </div>
+            <button type="button" className="tool-btn" onClick={captureLocation} disabled={locationStatus === "loading"}>{locationStatus === "loading" ? "Getting location…" : location ? "Refresh location" : "Use my location"}</button>
+          </div>
+          {locationStatus === "error" && <p className="journey-error">Location was not available. Check browser permission or continue without it.</p>}
+          {location && <LocationMap location={location} />}
+          {where && <a className="google-maps-link" href={directionsHref(location, where)} target="_blank" rel="noreferrer">Preview route in Google Maps ↗</a>}
+          <button type="button" className="form-submit journey-start" onClick={start} disabled={!where}>Start my journey →</button>
+          <p className="form-note">Nothing is sent when you start. The next screen gives you WhatsApp, SMS, and your phone&apos;s share sheet.</p>
         </div>
       ) : (
-        <div className="checkin-live">
-          <div className="checkin-clock">{formatClock(remaining)}</div>
-          <p>Checking in {where ? `when you reach ${where}` : "when you arrive"}. Started {startedAt}.</p>
-          <div className="checkin-actions">
-            <button className="tool-btn primary" onClick={cancel}>I&apos;ve arrived safely</button>
-            <button className="tool-btn ghost" onClick={cancel}>Cancel</button>
+        <div className={overdue ? "journey-active overdue" : "journey-active"} aria-live="polite">
+          <div className="journey-status-line">
+            <span>{overdue ? "CHECK-IN OVERDUE" : "JOURNEY ACTIVE"}</span>
+            <b>{overdue ? "Please confirm you are safe" : formatClock(remaining)}</b>
+            <small>{where ? `Heading to ${where}` : "Journey in progress"} · expected {expectedAt}</small>
+          </div>
+
+          {location && <LocationMap location={location} />}
+          <div className="journey-location-row">
+            <div>
+              <b>{location ? "Latest location snapshot" : "No location attached"}</b>
+              <span>{location ? `Captured ${new Date(location.capturedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "You can add a location now and include it in your next message."}</span>
+            </div>
+            <button type="button" className="tool-btn" onClick={captureLocation} disabled={locationStatus === "loading"}>{locationStatus === "loading" ? "Updating…" : location ? "Update my location" : "Add my location"}</button>
+          </div>
+
+          <div className="journey-share-box">
+            <div><b>{overdue ? "Alert your trusted person" : "Share this journey"}</b><span>{selectedGuardian ? `Ready for ${selectedGuardian.name}` : "Add a trusted person above for one-tap WhatsApp and SMS."}</span></div>
+            <div className="journey-share-actions">
+              <button type="button" className="tool-btn primary" onClick={() => shareJourney(overdue ? alertMessage : journeyMessage)}>Share</button>
+              {selectedGuardian && <a className={overdue ? "tool-btn alert" : "tool-btn"} href={whatsappHref(selectedGuardian.phone, overdue ? alertMessage : journeyMessage)} target="_blank" rel="noreferrer">WhatsApp</a>}
+              {selectedGuardian && <a className={overdue ? "tool-btn alert" : "tool-btn"} href={smsHref(selectedGuardian.phone, overdue ? alertMessage : journeyMessage)}>SMS</a>}
+            </div>
+          </div>
+          {shareStatus && <p className="journey-share-status">{shareStatus}</p>}
+
+          <div className="checkin-actions journey-finish-actions">
+            {selectedGuardian && <a className="tool-btn primary" href={whatsappHref(selectedGuardian.phone, safeMessage)} target="_blank" rel="noreferrer">Tell {selectedGuardian.name} I&apos;m safe</a>}
+            <button type="button" className="tool-btn ghost" onClick={end}>{overdue ? "I&apos;m safe — end journey" : "End journey"}</button>
+            {overdue && <a className="tool-btn emergency" href="tel:999">Call 999</a>}
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+function LocationMap({ location }: { location: LocationSnapshot }) {
+  return (
+    <div className="journey-map-wrap">
+      <iframe className="google-map-embed" title="Google Map showing your latest Safe Journey location" loading="lazy" src={`https://www.google.com/maps?q=${location.lat},${location.lng}&z=16&output=embed`} />
+      <a className="google-maps-link primary journey-map-link" href={googleMapsSearchUrl(location)} target="_blank" rel="noreferrer">Open pin in Google Maps ↗</a>
+    </div>
   );
 }

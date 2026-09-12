@@ -50,9 +50,9 @@ export default function SafetyPage() {
     <main>
       <SiteNav />
       <section className="form-hero shell">
-        <span className="kicker">FREE, FOR EVERYONE</span>
-        <h1>Your safety toolkit.</h1>
-        <p>No account, no payment. These tools run in your browser and are yours to use whether or not you ever book protection through SafeMY.</p>
+        <span className="kicker">SAFEMY PHASE 1 · FREE, NO ACCOUNT</span>
+        <h1>Tell someone before you go.</h1>
+        <p>Save a trusted person, start a timed journey, attach a Google Maps location, and share the plan from your phone. Your trusted-person list stays on this device.</p>
       </section>
 
       <section className="shell toolkit-shell">

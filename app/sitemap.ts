@@ -21,7 +21,7 @@ const publicRoutes = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-08-02T00:00:00+08:00");
+  const lastModified = new Date("2026-09-12T00:00:00+08:00");
   return publicRoutes.map((route) => ({
     url: `https://safemy.org${route}`,
     lastModified,
