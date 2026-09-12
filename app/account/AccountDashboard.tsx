@@ -31,12 +31,24 @@ export function AccountDashboard({ email }: { email: string }) {
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
-    const { data, error: loadError } = await supabase
+    const result = await supabase
       .from("safemy_protection_requests")
       .select("id, reference, service_type, location, start_date, start_time, status, quote_status, quote_currency, quote_amount, quote_breakdown, quote_expires_at, reviewed_at, accepted_at, assigned_at, completed_at")
       .order("created_at", { ascending: false });
-    if (loadError) setError(loadError.message);
-    setRows((data as OwnRequest[]) ?? []);
+    if (result.error) {
+      // Keep existing accounts readable while an operator is applying the
+      // first-release Supabase migration.
+      const fallback = await supabase.from("safemy_protection_requests").select("id, reference, service_type, location, start_date, start_time, status").order("created_at", { ascending: false });
+      if (fallback.error) setError(fallback.error.message);
+      setRows(((fallback.data as Array<Record<string, unknown>>) ?? []).map((row) => ({
+        id: Number(row.id), reference: String(row.reference ?? ""), service_type: String(row.service_type ?? ""), location: String(row.location ?? ""),
+        start_date: String(row.start_date ?? ""), start_time: String(row.start_time ?? ""), status: String(row.status ?? "pending_review"),
+        quote_status: "pending", quote_currency: "MYR", quote_amount: null, quote_breakdown: [], quote_expires_at: null,
+        reviewed_at: null, accepted_at: null, assigned_at: null, completed_at: null,
+      })));
+      return;
+    }
+    setRows((result.data as OwnRequest[]) ?? []);
   }, [supabase]);
 
   useEffect(() => {
